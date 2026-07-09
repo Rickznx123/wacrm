@@ -36,6 +36,7 @@ import {
 } from '@/lib/whatsapp/interactive';
 import { decrypt, encrypt, isLegacyFormat } from '@/lib/whatsapp/encryption';
 import { supabaseAdmin } from '@/lib/flows/admin-client';
+import { resolveEvolutionProvider } from '@/integrations/registry';
 import {
   sanitizePhoneForMeta,
   isValidE164,
@@ -247,37 +248,63 @@ export async function sendMessageToConversation(
     );
   }
 
-  // WhatsApp config, account-scoped.
-  const { data: config, error: configError } = await db
-    .from('whatsapp_config')
-    .select('*')
+  // Provider resolution: Evolution wins when an account has a connected
+  // channel row. Meta remains the fallback/default path.
+  const { data: evolutionChannel } = await db
+    .from('whatsapp_channels')
+    .select('instance_id, status')
     .eq('account_id', accountId)
-    .single();
+    .eq('provider', 'evolution')
+    .maybeSingle();
 
-  if (configError || !config) {
-    throw new SendMessageError(
-      'whatsapp_not_configured',
-      'WhatsApp not configured. Please set up your WhatsApp integration first.',
-      400
-    );
-  }
+  const useEvolution =
+    !!evolutionChannel?.instance_id && evolutionChannel.status === 'connected';
+  const forceMetaForType =
+    messageType === 'template' || messageType === 'interactive';
+  const useEvolutionForSend = useEvolution && !forceMetaForType;
 
-  const accessToken = decrypt(config.access_token);
+  // Meta config remains required for Meta sends (and for template/
+  // interactive, which are currently Meta-only in this CRM).
+  let config: {
+    id: string;
+    phone_number_id: string;
+    access_token: string;
+  } | null = null;
+  let accessToken: string | null = null;
 
-  // Self-heal legacy CBC ciphertexts. Fire-and-forget; idempotent.
-  if (isLegacyFormat(config.access_token)) {
-    void db
+  if (!useEvolutionForSend) {
+    const { data: metaConfig, error: configError } = await db
       .from('whatsapp_config')
-      .update({ access_token: encrypt(accessToken) })
-      .eq('id', config.id)
-      .then(({ error }: { error: { message: string } | null }) => {
-        if (error) {
-          console.warn(
-            '[send-message] access_token GCM upgrade failed:',
-            error.message
-          );
-        }
-      });
+      .select('id, phone_number_id, access_token')
+      .eq('account_id', accountId)
+      .single();
+
+    if (configError || !metaConfig) {
+      throw new SendMessageError(
+        'whatsapp_not_configured',
+        'WhatsApp not configured. Please set up your WhatsApp integration first.',
+        400
+      );
+    }
+
+    config = metaConfig;
+    accessToken = decrypt(metaConfig.access_token);
+
+    // Self-heal legacy CBC ciphertexts. Fire-and-forget; idempotent.
+    if (isLegacyFormat(metaConfig.access_token)) {
+      void db
+        .from('whatsapp_config')
+        .update({ access_token: encrypt(accessToken) })
+        .eq('id', metaConfig.id)
+        .then(({ error }: { error: { message: string } | null }) => {
+          if (error) {
+            console.warn(
+              '[send-message] access_token GCM upgrade failed:',
+              error.message
+            );
+          }
+        });
+    }
   }
 
   // Resolve the reply target to its Meta message_id. The parent must
@@ -329,7 +356,15 @@ export async function sendMessageToConversation(
     templateRow = data ?? null;
   }
 
-  const attempt = async (phone: string): Promise<string> => {
+  const attemptMeta = async (phone: string): Promise<string> => {
+    if (!config || !accessToken) {
+      throw new SendMessageError(
+        'whatsapp_not_configured',
+        'Meta configuration is missing for this send operation.',
+        400
+      );
+    }
+
     if (messageType === 'template') {
       const result = await sendTemplateMessage({
         phoneNumberId: config.phone_number_id,
@@ -400,44 +435,79 @@ export async function sendMessageToConversation(
   // back to the contact so the next send goes straight through.
   let waMessageId = '';
   let workingPhone = sanitizedPhone;
-  try {
-    const variants = phoneVariants(sanitizedPhone);
-    let lastError: unknown = null;
-
-    for (const variant of variants) {
-      try {
-        waMessageId = await attempt(variant);
-        workingPhone = variant;
-        lastError = null;
-        break;
-      } catch (err) {
-        const message = err instanceof Error ? err.message : String(err);
-        if (!isRecipientNotAllowedError(message)) {
-          throw err;
-        }
-        lastError = err;
-        console.warn(
-          `[send-message] variant "${variant}" rejected by Meta, trying next…`
-        );
-      }
+  if (useEvolutionForSend) {
+    if (!evolutionChannel?.instance_id) {
+      throw new SendMessageError(
+        'whatsapp_not_configured',
+        'Evolution channel is not connected.',
+        400
+      );
     }
 
-    if (lastError) throw lastError;
-  } catch (err) {
-    const message =
-      err instanceof Error ? err.message : 'Unknown Meta API error';
-    console.error('[send-message] Meta send failed for all variants:', message);
-    throw new SendMessageError('meta_error', `Meta API error: ${message}`, 502);
-  }
+    const provider = resolveEvolutionProvider();
+    try {
+      if (isMediaKind) {
+        const result = await provider.sendMedia(evolutionChannel.instance_id, {
+          to: sanitizedPhone,
+          kind: messageType as MediaKind,
+          link: mediaUrl!,
+          caption: contentText || undefined,
+          filename: filename || undefined,
+        });
+        waMessageId = result.messageId;
+      } else {
+        const result = await provider.sendText(
+          evolutionChannel.instance_id,
+          sanitizedPhone,
+          contentText!,
+        );
+        waMessageId = result.messageId;
+      }
+    } catch (err) {
+      const message = err instanceof Error ? err.message : 'Unknown Evolution API error';
+      console.error('[send-message] Evolution send failed:', message);
+      throw new SendMessageError('evolution_error', `Evolution API error: ${message}`, 502);
+    }
+  } else {
+    try {
+      const variants = phoneVariants(sanitizedPhone);
+      let lastError: unknown = null;
 
-  if (workingPhone !== sanitizedPhone) {
-    console.log(
-      `[send-message] Auto-corrected contact phone: ${sanitizedPhone} → ${workingPhone}`
-    );
-    await db
-      .from('contacts')
-      .update({ phone: workingPhone })
-      .eq('id', contact.id);
+      for (const variant of variants) {
+        try {
+          waMessageId = await attemptMeta(variant);
+          workingPhone = variant;
+          lastError = null;
+          break;
+        } catch (err) {
+          const message = err instanceof Error ? err.message : String(err);
+          if (!isRecipientNotAllowedError(message)) {
+            throw err;
+          }
+          lastError = err;
+          console.warn(
+            `[send-message] variant "${variant}" rejected by Meta, trying next…`
+          );
+        }
+      }
+
+      if (lastError) throw lastError;
+    } catch (err) {
+      const message =
+        err instanceof Error ? err.message : 'Unknown Meta API error';
+      console.error('[send-message] Meta send failed for all variants:', message);
+      throw new SendMessageError('meta_error', `Meta API error: ${message}`, 502);
+    }
+
+    if (workingPhone !== sanitizedPhone) {
+      console.log(
+        `[send-message] Auto-corrected contact phone: ${sanitizedPhone} → ${workingPhone}`
+      );
+      await db
+        .from('contacts')
+        .update({ phone: workingPhone })
+        .eq('id', contact.id);
+    }
   }
 
   // Persist the sent message. Field names MUST match the messages

@@ -1,0 +1,32 @@
+export type WhatsAppProviderName = 'meta' | 'evolution'
+
+export interface ChannelState {
+  provider: WhatsAppProviderName
+  status: 'creating' | 'qrcode' | 'connected' | 'disconnected' | 'error'
+  instanceId?: string
+  qrCode?: string | null
+  phone?: string | null
+  profileName?: string | null
+  lastError?: string | null
+}
+
+export interface WhatsAppProvider {
+  readonly name: WhatsAppProviderName
+}
+
+export interface EvolutionProvider extends WhatsAppProvider {
+  createOrConnect(instanceId: string, webhookUrl: string): Promise<ChannelState>
+  readState(instanceId: string): Promise<ChannelState>
+  disconnect(instanceId: string): Promise<void>
+  sendText(instanceId: string, to: string, text: string): Promise<{ messageId: string }>
+  sendMedia(
+    instanceId: string,
+    args: {
+      to: string
+      kind: 'image' | 'video' | 'document' | 'audio'
+      link: string
+      caption?: string
+      filename?: string
+    },
+  ): Promise<{ messageId: string }>
+}

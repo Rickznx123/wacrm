@@ -93,6 +93,10 @@ export async function GET(request: Request) {
     const mode = searchParams.get('hub.mode')
     const challenge = searchParams.get('hub.challenge')
     const verifyToken = searchParams.get('hub.verify_token')
+    const expectedVerifyToken =
+      process.env.META_WEBHOOK_VERIFY_TOKEN ||
+      process.env.WHATSAPP_VERIFY_TOKEN ||
+      process.env.VERIFY_TOKEN
 
     if (mode !== 'subscribe' || !challenge || !verifyToken) {
       return NextResponse.json(
@@ -101,7 +105,15 @@ export async function GET(request: Request) {
       )
     }
 
-    // Fetch all whatsapp configs to check verify tokens
+    if (expectedVerifyToken && verifyToken === expectedVerifyToken) {
+      return new Response(challenge, {
+        status: 200,
+        headers: { 'Content-Type': 'text/plain' },
+      })
+    }
+
+    // Fallback for existing instances that stored the verify token in
+    // the database before a dedicated env-based token was introduced.
     const { data: configs, error: configError } = await supabaseAdmin()
       .from('whatsapp_config')
       .select('id, verify_token')

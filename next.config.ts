@@ -3,6 +3,23 @@ import createNextIntlPlugin from "next-intl/plugin";
 
 const withNextIntl = createNextIntlPlugin("./src/i18n/request.ts");
 
+function assertEvolutionWebhookAuthEnv() {
+  const hasEvolutionBaseUrl = !!process.env.EVOLUTION_API_BASE_URL?.trim();
+  const hasEvolutionApiKey = !!process.env.EVOLUTION_API_KEY?.trim();
+  const evolutionEnabled = hasEvolutionBaseUrl || hasEvolutionApiKey;
+
+  if (!evolutionEnabled) return;
+
+  const webhookSecret = process.env.EVOLUTION_WEBHOOK_SECRET?.trim();
+  if (!webhookSecret) {
+    throw new Error(
+      "EVOLUTION_WEBHOOK_SECRET is required when Evolution API v2 is configured.",
+    );
+  }
+}
+
+assertEvolutionWebhookAuthEnv();
+
 /**
  * Baseline security headers applied to every response.
  *
