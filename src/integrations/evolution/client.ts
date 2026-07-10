@@ -109,15 +109,21 @@ async function evolutionFetch(path: string, options: EvolutionFetchOptions = {})
   const raw = await response.text()
   const data = raw ? safeJson(raw) : null
 
-  if (!response.ok) {
-    const upstream =
-      (data as { message?: string } | null)?.message ||
-      raw ||
-      ''
-    const safeMessage = sanitizeUpstreamErrorMessage(upstream)
-    const message = safeMessage || `Evolution API error ${response.status}`
-    throw new Error(message)
-  }
+ if (!response.ok) {
+  console.error('=== EVOLUTION RESPONSE ===')
+  console.error('Status:', response.status)
+  console.error('Body:', raw)
+
+  const upstream =
+    (data as { message?: string } | null)?.message ||
+    raw ||
+    ''
+
+  const safeMessage = sanitizeUpstreamErrorMessage(upstream)
+  const message = safeMessage || `Evolution API error ${response.status}`
+
+  throw new Error(message)
+}
 
   return data
 }
