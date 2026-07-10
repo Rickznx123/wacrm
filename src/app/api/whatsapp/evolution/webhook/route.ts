@@ -348,11 +348,25 @@ function parseInboundMessages(body: Record<string, unknown>): ParsedInboundMessa
   const data = asObject(body.data)
   const rootMessages = asArray(body.messages)
   const dataMessages = asArray(data.messages)
-  const source = dataMessages.length > 0 ? dataMessages : rootMessages
 
-  return source
-    .map((item) => parseInboundMessage(asObject(item)))
-    .filter((item): item is ParsedInboundMessage => item != null)
+  if (dataMessages.length > 0) {
+    return dataMessages
+      .map((item) => parseInboundMessage(asObject(item)))
+      .filter((item): item is ParsedInboundMessage => item != null)
+  }
+
+  if (rootMessages.length > 0) {
+    return rootMessages
+      .map((item) => parseInboundMessage(asObject(item)))
+      .filter((item): item is ParsedInboundMessage => item != null)
+  }
+
+  if (data.key || data.message) {
+    const single = parseInboundMessage(data)
+    return single ? [single] : []
+  }
+
+  return []
 }
 
 function parseStatusUpdates(body: Record<string, unknown>): Array<{ messageId: string; status: EvolutionStatus }> {
