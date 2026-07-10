@@ -37,11 +37,27 @@ function getConfig(): EvolutionConfig {
   const baseUrl = process.env.EVOLUTION_API_BASE_URL?.trim()
   const apiKey = process.env.EVOLUTION_API_KEY?.trim()
 
+  console.log('====================================')
+  console.log('=== EVOLUTION ENV DEBUG ===')
+  console.log({
+    hasBaseUrl: !!baseUrl,
+    hasApiKey: !!apiKey,
+    baseUrl,
+    apiKeyLength: apiKey?.length ?? 0,
+    nodeEnv: process.env.NODE_ENV,
+  })
+  console.log('====================================')
+
   if (!baseUrl || !apiKey) {
-    throw new Error('Evolution API is not configured. Set EVOLUTION_API_BASE_URL and EVOLUTION_API_KEY.')
+    throw new Error(
+      `Evolution API config error: hasBaseUrl=${!!baseUrl}, hasApiKey=${!!apiKey}`,
+    )
   }
 
-  return { baseUrl: baseUrl.replace(/\/$/, ''), apiKey }
+  return {
+    baseUrl: baseUrl.replace(/\/$/, ''),
+    apiKey,
+  }
 }
 
 function getTimeoutMs(): number {
