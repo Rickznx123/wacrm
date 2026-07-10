@@ -258,10 +258,15 @@ export const evolutionProvider: EvolutionProvider = {
     return list
       .map((item) => {
         const obj = item && typeof item === 'object' ? (item as Record<string, unknown>) : {}
-        const id = typeof obj.id === 'string' ? obj.id : ''
-        if (!id || id.endsWith('@g.us') || id.includes('broadcast')) return null
+        // The phone JID lives in `remoteJid` (e.g. "5599...@s.whatsapp.net");
+        // `id` is an internal cuid, not a number. Groups are flagged with
+        // `isGroup: true` rather than a "@g.us" suffix on the id.
+        const jid = typeof obj.remoteJid === 'string' ? obj.remoteJid : ''
+        if (!jid || obj.isGroup === true || jid.endsWith('@g.us') || jid.includes('broadcast')) {
+          return null
+        }
 
-        const digits = id.split('@')[0]
+        const digits = jid.split('@')[0]
         if (!digits || !/^\d+$/.test(digits)) return null
 
         const name =
