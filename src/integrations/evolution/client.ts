@@ -1,4 +1,5 @@
 import type { ChannelState, EvolutionProvider } from '../types'
+import { getRequiredEvolutionWebhookSecret } from '@/lib/whatsapp/evolution-webhook-auth'
 
 interface EvolutionConfig {
   baseUrl: string
@@ -217,7 +218,9 @@ export const evolutionProvider: EvolutionProvider = {
         webhook: {
           enabled: true,
           url: webhookUrl,
-          headers: {},
+          headers: {
+            'x-evolution-secret': getRequiredEvolutionWebhookSecret(),
+          },
           byEvents: false,
           base64: false,
           events: [
