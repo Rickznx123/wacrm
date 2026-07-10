@@ -49,6 +49,7 @@ import {
   SlidersHorizontal,
   Filter,
   X,
+  RefreshCw,
 } from 'lucide-react';
 import { ContactForm } from '@/components/contacts/contact-form';
 import { ContactDetailView } from '@/components/contacts/contact-detail-view';
@@ -85,6 +86,10 @@ export default function ContactsPage() {
   const [detailOpen, setDetailOpen] = useState(false);
   const [detailContactId, setDetailContactId] = useState<string | null>(null);
   const [importOpen, setImportOpen] = useState(false);
+  const [syncing, setSyncing] = useState(false);
+  // Whether a connected Evolution WhatsApp channel exists — gates the
+  // "Sync from WhatsApp" button, since the import endpoint 400s without one.
+  const [evolutionConnected, setEvolutionConnected] = useState(false);
   const [customFieldsOpen, setCustomFieldsOpen] = useState(false);
   const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
   const [deleteTarget, setDeleteTarget] = useState<Contact | null>(null);
@@ -223,6 +228,27 @@ export default function ContactsPage() {
     fetchContacts();
   }, [fetchContacts]);
 
+  // Check once on mount whether an Evolution channel is connected so the
+  // "Sync from WhatsApp" button only shows when the import can succeed.
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      try {
+        const res = await fetch('/api/whatsapp/evolution/qrcode', {
+          cache: 'no-store',
+        });
+        if (!res.ok) return;
+        const payload = (await res.json()) as { connected?: boolean };
+        if (!cancelled) setEvolutionConnected(Boolean(payload.connected));
+      } catch {
+        // Leave the button hidden if the status check fails.
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
   function openAddForm() {
     setEditContact(null);
     setEditContactTags([]);
@@ -242,6 +268,33 @@ export default function ContactsPage() {
   function openDetail(contactId: string) {
     setDetailContactId(contactId);
     setDetailOpen(true);
+  }
+
+  async function handleSyncFromWhatsApp() {
+    setSyncing(true);
+    try {
+      const res = await fetch('/api/whatsapp/evolution/contacts/import', {
+        method: 'POST',
+      });
+      const body = await res.json().catch(() => null);
+
+      if (!res.ok) {
+        toast.error(body?.error ?? t('toastSyncFailed'));
+        return;
+      }
+
+      toast.success(
+        t('toastSyncSuccess', {
+          imported: body?.imported ?? 0,
+          skipped: body?.skipped ?? 0,
+        })
+      );
+      fetchContacts();
+    } catch {
+      toast.error(t('toastSyncFailed'));
+    } finally {
+      setSyncing(false);
+    }
   }
 
   function confirmDelete(contact: Contact) {
@@ -359,6 +412,23 @@ export default function ContactsPage() {
               <SlidersHorizontal className="size-4" />
               {t('customFieldsBtn')}
             </Button>
+          )}
+          {evolutionConnected && (
+            <GatedButton
+              variant="outline"
+              canAct={canEdit}
+              gateReason="sync contacts from WhatsApp"
+              onClick={handleSyncFromWhatsApp}
+              disabled={syncing}
+              className="border-border text-muted-foreground hover:bg-muted"
+            >
+              {syncing ? (
+                <Loader2 className="size-4 animate-spin" />
+              ) : (
+                <RefreshCw className="size-4" />
+              )}
+              {syncing ? t('syncingEvolution') : t('syncEvolutionBtn')}
+            </GatedButton>
           )}
           <GatedButton
             variant="outline"

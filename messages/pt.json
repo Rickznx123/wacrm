@@ -281,6 +281,8 @@
       "subtitleZero": "Gerencie sua lista de contatos.",
       "customFieldsBtn": "Campos personalizados",
       "importBtn": "Importar",
+      "syncEvolutionBtn": "Sincronizar do WhatsApp",
+      "syncingEvolution": "Sincronizando...",
       "addContactBtn": "Adicionar Contato",
       "searchPlaceholder": "Pesquisar por nome, telefone ou email...",
       "filterByTags": "Filtrar por tags",
@@ -316,7 +318,9 @@
       "toastFailedDelete": "Falha ao deletar contato",
       "toastDeleted": "Contato deletado",
       "toastBulkFailedDelete": "Falha ao deletar contatos",
-      "toastBulkDeleted": "{count} contatos deletados"
+      "toastBulkDeleted": "{count} contatos deletados",
+      "toastSyncSuccess": "{imported} novos contatos importados, {skipped} ignorados",
+      "toastSyncFailed": "Falha ao sincronizar contatos do WhatsApp"
     },
     "form": {
       "addTitle": "Adicionar Contato",

@@ -281,6 +281,8 @@
       "subtitleZero": "Manage your contact list.",
       "customFieldsBtn": "Custom fields",
       "importBtn": "Import",
+      "syncEvolutionBtn": "Sync from WhatsApp",
+      "syncingEvolution": "Syncing...",
       "addContactBtn": "Add Contact",
       "searchPlaceholder": "Search by name, phone, or email...",
       "filterByTags": "Filter by tags",
@@ -316,7 +318,9 @@
       "toastFailedDelete": "Failed to delete contact",
       "toastDeleted": "Contact deleted",
       "toastBulkFailedDelete": "Failed to delete contacts",
-      "toastBulkDeleted": "{count} contacts deleted"
+      "toastBulkDeleted": "{count} contacts deleted",
+      "toastSyncSuccess": "Imported {imported} new contacts, {skipped} skipped",
+      "toastSyncFailed": "Failed to sync contacts from WhatsApp"
     },
     "form": {
       "addTitle": "Add Contact",

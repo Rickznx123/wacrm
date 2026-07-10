@@ -248,6 +248,32 @@ export const evolutionProvider: EvolutionProvider = {
     }
   },
 
+  async listContacts(instanceId) {
+    const payload = await evolutionFetch(`/chat/findContacts/${instanceId}`, {
+      method: 'POST',
+      body: {},
+    })
+    const list = Array.isArray(payload) ? payload : []
+
+    return list
+      .map((item) => {
+        const obj = item && typeof item === 'object' ? (item as Record<string, unknown>) : {}
+        const id = typeof obj.id === 'string' ? obj.id : ''
+        if (!id || id.endsWith('@g.us') || id.includes('broadcast')) return null
+
+        const digits = id.split('@')[0]
+        if (!digits || !/^\d+$/.test(digits)) return null
+
+        const name =
+          (typeof obj.pushName === 'string' && obj.pushName) ||
+          (typeof obj.name === 'string' && obj.name) ||
+          null
+
+        return { phone: `+${digits}`, name }
+      })
+      .filter((contact): contact is { phone: string; name: string | null } => contact != null)
+  },
+
   async readState(instanceId) {
     const payload = await evolutionFetch(`/instance/connectionState/${instanceId}`)
     return mapState(instanceId, payload)
