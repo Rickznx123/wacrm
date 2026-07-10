@@ -18,7 +18,11 @@ function resolveWebhookUrl(request: Request) {
 }
 
 export async function POST(request: Request) {
-  console.log('=== EVOLUTION CONNECT V2 ===')
+  console.log('===================================')
+console.log('=== EVOLUTION CONNECT V3 ===')
+console.log('COMMIT: af53fe2')
+console.log('TIME:', new Date().toISOString())
+console.log('===================================')
 
   try {
     console.log('1 - Entrou na rota')
