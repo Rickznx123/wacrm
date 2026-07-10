@@ -217,7 +217,14 @@ export const evolutionProvider: EvolutionProvider = {
         webhook: {
           enabled: true,
           url: webhookUrl,
-          webhookByEvents: true,
+          headers: {},
+          byEvents: false,
+          base64: false,
+          events: [
+            'QRCODE_UPDATED',
+            'CONNECTION_UPDATE',
+            'MESSAGES_UPSERT',
+          ],
         },
       },
     })
