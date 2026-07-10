@@ -156,7 +156,9 @@ function mapState(instanceId: string, payload: unknown): ChannelState {
       'disconnected',
   ).toLowerCase()
 
+  const qrCodeObj = readObject(root, 'qrcode')
   const qrCode =
+    readString(qrCodeObj, 'base64') ||
     readString(root, 'qrcode') ||
     readString(root, 'qr') ||
     readString(root, 'base64')

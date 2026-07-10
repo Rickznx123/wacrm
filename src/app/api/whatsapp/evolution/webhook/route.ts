@@ -208,7 +208,12 @@ function normalizeEvent(body: unknown): EvolutionWebhookEvent {
     status,
     phone: asString(payload.wuid) || asString(payload.number) || null,
     profileName: asString(payload.profileName) || asString(payload.pushName) || null,
-    qrCode: asString(payload.qrcode) || asString(payload.qr) || asString(payload.base64) || null,
+    qrCode:
+      asString(asObject(payload.qrcode).base64) ||
+      asString(payload.qrcode) ||
+      asString(payload.qr) ||
+      asString(payload.base64) ||
+      null,
     lastError: asString(payload.error) || null,
   }
 }
