@@ -30,7 +30,7 @@ interface EvolutionReadResponse {
 
 export function WhatsAppChannelsConfig() {
   const t = useTranslations('Settings');
-  const [activeTab, setActiveTab] = useState<'meta' | 'evolution'>('meta');
+  const [activeTab, setActiveTab] = useState<'meta' | 'evolution'>('evolution');
   const [loading, setLoading] = useState(true);
   const [connecting, setConnecting] = useState(false);
   const [disconnecting, setDisconnecting] = useState(false);
@@ -109,13 +109,8 @@ export function WhatsAppChannelsConfig() {
         <CardContent>
           <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as 'meta' | 'evolution')}>
             <TabsList>
-              <TabsTrigger value="meta">WhatsApp Cloud (Meta)</TabsTrigger>
               <TabsTrigger value="evolution">WhatsApp QR (Evolution)</TabsTrigger>
             </TabsList>
-
-            <TabsContent value="meta" className="mt-4">
-              <WhatsAppConfig />
-            </TabsContent>
 
             <TabsContent value="evolution" className="mt-4 space-y-4">
               <Card>
