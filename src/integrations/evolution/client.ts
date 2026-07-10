@@ -1,3 +1,9 @@
+throw new Error(
+  `Evolution API config error: hasBaseUrl=${!!baseUrl}, hasApiKey=${!!apiKey}`,
+)
+
+
+import type { ChannelState, EvolutionProvider } from '../types'
 import type { ChannelState, EvolutionProvider } from '../types'
 
 interface EvolutionConfig {
