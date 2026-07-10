@@ -211,30 +211,41 @@ export const evolutionProvider: EvolutionProvider = {
   name: 'evolution',
 
   async createOrConnect(instanceId, webhookUrl) {
-    const payload = await evolutionFetch('/instance/create', {
-      method: 'POST',
-      body: {
-        instanceName: instanceId,
-        integration: 'WHATSAPP-BAILEYS',
-        qrcode: true,
-        webhook: {
-          enabled: true,
-          url: webhookUrl,
-          headers: {
-            'x-evolution-secret': getRequiredEvolutionWebhookSecret(),
-          },
-          byEvents: false,
-          base64: false,
-          events: [
-            'QRCODE_UPDATED',
-            'CONNECTION_UPDATE',
-            'MESSAGES_UPSERT',
-          ],
-        },
-      },
-    })
+    try {
+      const existing = await evolutionFetch(`/instance/connectionState/${instanceId}`)
+      const currentState = mapState(instanceId, existing)
 
-    return mapState(instanceId, payload)
+      if (currentState.status !== 'connected') {
+        const qrPayload = await evolutionFetch(`/instance/connect/${instanceId}`)
+        return mapState(instanceId, qrPayload)
+      }
+
+      return currentState
+    } catch (err) {
+      const payload = await evolutionFetch('/instance/create', {
+        method: 'POST',
+        body: {
+          instanceName: instanceId,
+          integration: 'WHATSAPP-BAILEYS',
+          qrcode: true,
+          webhook: {
+            enabled: true,
+            url: webhookUrl,
+            headers: {
+              'x-evolution-secret': getRequiredEvolutionWebhookSecret(),
+            },
+            byEvents: false,
+            base64: false,
+            events: [
+              'QRCODE_UPDATED',
+              'CONNECTION_UPDATE',
+              'MESSAGES_UPSERT',
+            ],
+          },
+        },
+      })
+      return mapState(instanceId, payload)
+    }
   },
 
   async readState(instanceId) {
