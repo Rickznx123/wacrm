@@ -13,6 +13,7 @@ import { Step4ScheduleSend } from '@/components/broadcasts/step4-schedule-send';
 import { useBroadcastSending } from '@/hooks/use-broadcast-sending';
 import { Check } from 'lucide-react';
 import { useTranslations } from 'next-intl';
+import { ASCENT, ASCENT_INTERACTIVE } from '@/lib/ui/ascent';
 
 const steps = [
   { label: 'template', key: 'template' },
@@ -130,9 +131,14 @@ export default function NewBroadcastPage() {
   }
 
   return (
-    <div className="mx-auto max-w-3xl space-y-8">
+    <div className={`relative -m-4 min-h-[calc(100vh-0px)] overflow-hidden p-6 sm:-m-6 sm:p-10 ${ASCENT.canvas}`}>
+      <div className="pointer-events-none absolute inset-0 opacity-80">
+        <div className="absolute -left-20 top-12 h-80 w-80 rounded-full bg-[#7B61FF]/14 blur-3xl" />
+        <div className="absolute -right-24 bottom-12 h-[28rem] w-[28rem] rounded-full bg-[#FF4F8A]/9 blur-3xl" />
+      </div>
+      <div className="mx-auto max-w-3xl space-y-8">
       {/* Header */}
-      <div>
+      <div className={`rounded-2xl border border-white/10 bg-[linear-gradient(160deg,rgba(13,14,20,0.82),rgba(42,27,77,0.22)_55%,rgba(13,14,20,0.78))] p-6 shadow-[0_18px_48px_rgba(7,8,18,0.38),inset_0_1px_0_rgba(255,255,255,0.08)] backdrop-blur-[8px] ${ASCENT.panel}`}>
         <h1 className="text-2xl font-bold text-foreground">{t('title')}</h1>
         <p className="mt-1 text-sm text-muted-foreground">
           {t('subtitle')}
@@ -140,7 +146,8 @@ export default function NewBroadcastPage() {
       </div>
 
       {/* Step Indicator */}
-      <div className="flex items-center justify-between">
+      <div className={`rounded-2xl border border-white/12 bg-[linear-gradient(170deg,rgba(255,255,255,0.05),rgba(255,255,255,0.016)_56%,rgba(255,255,255,0.01))] p-4 shadow-[0_16px_36px_rgba(7,8,18,0.36)] ${ASCENT.panel}`}>
+        <div className="flex items-center justify-between">
         {steps.map((step, index) => {
           const isActive = index === currentStep;
           const isCompleted = index < currentStep;
@@ -151,10 +158,10 @@ export default function NewBroadcastPage() {
                 <div
                   className={`flex h-8 w-8 items-center justify-center rounded-full text-xs font-medium transition-all ${
                     isCompleted
-                      ? 'bg-primary text-primary-foreground'
+                      ? 'border border-white/10 bg-[linear-gradient(135deg,#7B61FF,#6B4FE6)] text-primary-foreground shadow-[0_10px_24px_rgba(66,46,165,0.45)]'
                       : isActive
-                        ? 'border-2 border-primary bg-primary/10 text-primary'
-                        : 'border border-border bg-muted text-muted-foreground'
+                        ? 'border-2 border-primary bg-primary/12 text-primary shadow-[0_0_0_1px_rgba(123,97,255,0.25)]'
+                        : 'border border-white/12 bg-white/[0.03] text-muted-foreground'
                   }`}
                 >
                   {isCompleted ? <Check className="h-4 w-4" /> : index + 1}
@@ -170,17 +177,18 @@ export default function NewBroadcastPage() {
               {index < steps.length - 1 && (
                 <div
                   className={`mx-3 h-px flex-1 ${
-                    index < currentStep ? 'bg-primary' : 'bg-muted'
+                    index < currentStep ? 'bg-[#7B61FF]' : 'bg-white/12'
                   }`}
                 />
               )}
             </div>
           );
         })}
+        </div>
       </div>
 
       {/* Step Content */}
-      <div className="relative min-h-[400px]">
+      <div className={`relative min-h-[400px] rounded-2xl border border-white/12 bg-[linear-gradient(170deg,rgba(255,255,255,0.05),rgba(255,255,255,0.016)_56%,rgba(255,255,255,0.01))] p-6 shadow-[0_16px_36px_rgba(7,8,18,0.36)] ${ASCENT.panel}`}>
         <div
           className="transition-all duration-300 ease-in-out"
           style={{
@@ -229,6 +237,7 @@ export default function NewBroadcastPage() {
             />
           )}
         </div>
+      </div>
       </div>
     </div>
   );

@@ -39,6 +39,7 @@ import {
   getRecipientStatus,
 } from '@/lib/broadcast-status';
 import { useTranslations } from 'next-intl';
+import { ASCENT, ASCENT_INTERACTIVE } from '@/lib/ui/ascent';
 
 interface StatCardProps {
   label: string;
@@ -51,7 +52,7 @@ interface StatCardProps {
 function StatCard({ label, value, total, icon, color }: StatCardProps) {
   const pct = total > 0 ? Math.round((value / total) * 100) : 0;
   return (
-    <div className="rounded-xl border border-border bg-card p-4">
+    <div className="rounded-xl border border-white/12 bg-[linear-gradient(170deg,rgba(255,255,255,0.05),rgba(255,255,255,0.016)_56%,rgba(255,255,255,0.01))] p-4 shadow-[0_12px_28px_rgba(7,8,18,0.34)]">
       <div className="flex items-center justify-between">
         <div className={`flex h-8 w-8 items-center justify-center rounded-lg ${color}`}>
           {icon}
@@ -78,7 +79,7 @@ interface FunnelStep {
 function FunnelChart({ steps }: { steps: FunnelStep[] }) {
   const max = Math.max(...steps.map((s) => s.value), 1);
   return (
-    <div className="rounded-xl border border-border bg-card p-4">
+    <div className="rounded-xl border border-white/12 bg-[linear-gradient(170deg,rgba(255,255,255,0.05),rgba(255,255,255,0.016)_56%,rgba(255,255,255,0.01))] p-4 shadow-[0_12px_28px_rgba(7,8,18,0.34)]">
       <h3 className="mb-4 text-sm font-medium text-foreground">Funnel</h3>
       <div className="space-y-2">
         {steps.map((step) => {
@@ -246,7 +247,7 @@ export default function BroadcastDetailPage() {
 
   if (loading) {
     return (
-      <div className="flex h-64 items-center justify-center">
+      <div className={`flex h-64 items-center justify-center rounded-2xl border border-white/10 bg-[linear-gradient(170deg,rgba(255,255,255,0.04),rgba(255,255,255,0.01)_60%)] ${ASCENT.panel}`}>
         <Loader2 className="h-6 w-6 animate-spin text-primary" />
       </div>
     );
@@ -254,7 +255,7 @@ export default function BroadcastDetailPage() {
 
   if (error || !broadcast) {
     return (
-      <div className="flex h-64 flex-col items-center justify-center gap-2">
+      <div className={`flex h-64 flex-col items-center justify-center gap-2 rounded-2xl border border-white/10 bg-[linear-gradient(170deg,rgba(255,255,255,0.04),rgba(255,255,255,0.01)_60%)] ${ASCENT.panel}`}>
         <p className="text-sm text-red-400">{error ?? t('notFound')}</p>
         <Button variant="outline" onClick={() => router.push('/broadcasts')}>
           {t('backToBroadcasts')}
@@ -273,9 +274,13 @@ export default function BroadcastDetailPage() {
   ];
 
   return (
-    <div className="space-y-6">
+    <div className={`relative -m-4 min-h-[calc(100vh-0px)] overflow-hidden space-y-6 p-6 sm:-m-6 sm:p-10 ${ASCENT.canvas}`}>
+      <div className="pointer-events-none absolute inset-0 opacity-80">
+        <div className="absolute -left-20 top-12 h-80 w-80 rounded-full bg-[#7B61FF]/14 blur-3xl" />
+        <div className="absolute -right-24 bottom-12 h-[28rem] w-[28rem] rounded-full bg-[#FF4F8A]/9 blur-3xl" />
+      </div>
       {/* Header */}
-      <div className="flex flex-wrap items-start justify-between gap-3">
+      <div className={`relative flex flex-wrap items-start justify-between gap-3 rounded-2xl border border-white/10 bg-[linear-gradient(160deg,rgba(13,14,20,0.82),rgba(42,27,77,0.22)_55%,rgba(13,14,20,0.78))] p-6 shadow-[0_18px_48px_rgba(7,8,18,0.38),inset_0_1px_0_rgba(255,255,255,0.08)] backdrop-blur-[8px] ${ASCENT.panel}`}>
         <div className="flex items-center gap-4">
           <Button
             variant="outline"
@@ -397,8 +402,8 @@ export default function BroadcastDetailPage() {
       <FunnelChart steps={funnelSteps} />
 
       {/* Recipients Table */}
-      <div className="rounded-xl border border-border bg-card">
-        <div className="flex flex-wrap items-center justify-between gap-2 border-b border-border px-4 py-3">
+      <div className={`rounded-2xl border border-white/12 bg-[linear-gradient(170deg,rgba(255,255,255,0.05),rgba(255,255,255,0.016)_56%,rgba(255,255,255,0.01))] shadow-[0_16px_36px_rgba(7,8,18,0.36)] ${ASCENT.panel}`}>
+        <div className="flex flex-wrap items-center justify-between gap-2 border-b border-white/10 px-4 py-3">
           <h2 className="text-sm font-medium text-foreground">
             {statusFilter !== 'all'
               ? t('recipientsHeader', { filtered: filteredRecipients.length, total: recipients.length })
@@ -451,7 +456,7 @@ export default function BroadcastDetailPage() {
               size="sm"
               onClick={handleExport}
               disabled={recipients.length === 0}
-              className="border-border text-muted-foreground hover:bg-muted"
+              className={`border-white/12 bg-white/[0.03] text-muted-foreground hover:bg-[#7B61FF]/10 ${ASCENT_INTERACTIVE}`}
             >
               <Download className="h-3.5 w-3.5" />
               {t('exportCsv')}
@@ -471,7 +476,7 @@ export default function BroadcastDetailPage() {
           <div className="overflow-x-auto">
             <Table>
               <TableHeader>
-                <TableRow className="border-border hover:bg-transparent">
+                <TableRow className="border-b border-white/10 bg-[linear-gradient(180deg,rgba(123,97,255,0.12),rgba(255,255,255,0.02)_60%,transparent)] hover:bg-transparent">
                   <TableHead className="text-muted-foreground">{t('table.contact')}</TableHead>
                   <TableHead className="text-muted-foreground">{t('table.phone')}</TableHead>
                   <TableHead className="text-muted-foreground">{t('table.status')}</TableHead>
