@@ -55,6 +55,7 @@ import type {
   MessageTemplate,
   Tag as TagRecord,
 } from "@/types"
+import { ASCENT, ASCENT_INTERACTIVE } from "@/lib/ui/ascent"
 import {
   InteractiveBuilder,
   blankButtonsPayload,
@@ -710,15 +711,19 @@ export function AutomationBuilder({ initial }: { initial: BuilderInitial }) {
   }
 
   return (
-    <div className="fixed inset-0 flex flex-col bg-background">
+    <div className={`fixed inset-0 flex flex-col overflow-hidden ${ASCENT.canvas}`}>
+      <div className="pointer-events-none absolute inset-0 opacity-80">
+        <div className="absolute -left-20 top-12 h-80 w-80 rounded-full bg-[#7B61FF]/14 blur-3xl" />
+        <div className="absolute -right-24 bottom-12 h-[28rem] w-[28rem] rounded-full bg-[#FF4F8A]/9 blur-3xl" />
+      </div>
       {/* Top bar. At sub-sm widths the "Active" label is hidden and the
           switch moves to the right of the save button, so the name input
           gets maximum width. */}
-      <header className="flex flex-shrink-0 items-center gap-2 border-b border-border bg-card/80 px-3 py-3 sm:gap-3 sm:px-4">
+      <header className="relative flex flex-shrink-0 items-center gap-2 border-b border-white/10 bg-[linear-gradient(160deg,rgba(13,14,20,0.82),rgba(42,27,77,0.22)_55%,rgba(13,14,20,0.78))] px-3 py-3 shadow-[0_18px_44px_rgba(7,8,18,0.35),inset_0_1px_0_rgba(255,255,255,0.08)] backdrop-blur-[8px] sm:gap-3 sm:px-4">
         <button
           type="button"
           onClick={() => router.push("/automations")}
-          className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+          className={`flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-muted hover:text-foreground ${ASCENT_INTERACTIVE}`}
           aria-label={t("backToAutomations")}
         >
           <ArrowLeft className="h-4 w-4" />
@@ -740,7 +745,7 @@ export function AutomationBuilder({ initial }: { initial: BuilderInitial }) {
         <Button
           onClick={save}
           disabled={saving}
-          className="bg-primary text-primary-foreground hover:bg-primary/90"
+          className={`border border-white/10 bg-[linear-gradient(135deg,#7B61FF,#6B4FE6)] text-primary-foreground shadow-[0_10px_24px_rgba(66,46,165,0.45)] hover:brightness-105 ${ASCENT_INTERACTIVE}`}
         >
           {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : null}
           {isEditing ? t("save") : t("saveDraft")}
@@ -798,7 +803,7 @@ function TriggerCard({
     // Card width: full on mobile, fixed 320px on sm+. The canvas wrapper
     // (max-w-2xl + px-4) keeps this tidy on tablet/desktop.
     <div className="z-10 w-full max-w-[320px] sm:w-80">
-      <div className="rounded-lg border border-border border-l-4 border-l-blue-500 bg-card shadow-lg">
+      <div className="rounded-xl border border-white/12 border-l-4 border-l-blue-500 bg-[linear-gradient(170deg,rgba(255,255,255,0.05),rgba(255,255,255,0.018)_54%,rgba(255,255,255,0.01))] shadow-[0_14px_32px_rgba(7,8,18,0.34)]">
         <button
           type="button"
           onClick={() => setOpen((v) => !v)}
@@ -818,7 +823,7 @@ function TriggerCard({
           />
         </button>
         {open && (
-          <div className="space-y-3 border-t border-border px-4 py-3">
+          <div className="space-y-3 border-t border-white/10 px-4 py-3">
             <div>
               <label className="mb-1 block text-xs font-medium text-muted-foreground">
                 {t("triggerType")}
@@ -1097,7 +1102,7 @@ function StepRenderer({
       <div className={cn("z-10 flex flex-col", width)}>
         <div
           className={cn(
-            "rounded-lg border border-border border-l-4 bg-card shadow-lg",
+            "rounded-xl border border-white/12 border-l-4 bg-[linear-gradient(170deg,rgba(255,255,255,0.05),rgba(255,255,255,0.018)_54%,rgba(255,255,255,0.01))] shadow-[0_14px_32px_rgba(7,8,18,0.34)]",
             meta.border,
           )}
         >
@@ -1107,7 +1112,7 @@ function StepRenderer({
             className="flex w-full items-center gap-3 px-4 py-3 text-left"
           >
             <GripVertical className="h-4 w-4 flex-shrink-0 text-muted-foreground" aria-hidden />
-            <div className="flex h-8 w-8 items-center justify-center rounded-md bg-muted text-muted-foreground">
+            <div className="flex h-8 w-8 items-center justify-center rounded-md border border-white/12 bg-white/[0.03] text-muted-foreground">
               <Icon className="h-4 w-4" />
             </div>
             <div className="min-w-0 flex-1">
@@ -1122,7 +1127,7 @@ function StepRenderer({
             />
           </button>
           {expanded && (
-            <div className="border-t border-border px-4 py-3">
+            <div className="border-t border-white/10 px-4 py-3">
               <StepEditor
                 step={step}
                 onChange={(next) => props.updateStep(path, () => next)}

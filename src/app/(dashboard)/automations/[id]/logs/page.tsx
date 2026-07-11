@@ -21,6 +21,7 @@ import type {
 import { Button } from "@/components/ui/button"
 import { cn } from "@/lib/utils"
 import { formatRelative } from "@/lib/automations/trigger-meta"
+import { ASCENT, ASCENT_INTERACTIVE } from "@/lib/ui/ascent"
 
 export default function AutomationLogsPage({
   params,
@@ -66,30 +67,46 @@ export default function AutomationLogsPage({
 
   if (error) {
     return (
-      <div className="flex h-64 flex-col items-center justify-center gap-3">
+      <div className={`relative -m-4 min-h-[calc(100vh-0px)] overflow-hidden p-6 sm:-m-6 sm:p-10 ${ASCENT.canvas}`}>
+        <div className="pointer-events-none absolute inset-0 opacity-80">
+          <div className="absolute -left-20 top-12 h-80 w-80 rounded-full bg-[#7B61FF]/14 blur-3xl" />
+          <div className="absolute -right-24 bottom-12 h-[28rem] w-[28rem] rounded-full bg-[#FF4F8A]/9 blur-3xl" />
+        </div>
+        <div className={`relative flex h-64 flex-col items-center justify-center gap-3 rounded-2xl border border-white/10 bg-[linear-gradient(170deg,rgba(255,255,255,0.04),rgba(255,255,255,0.01)_60%)] ${ASCENT.panel}`}>
         <p className="text-sm text-red-400">{error}</p>
         <Button variant="outline" onClick={() => router.push("/automations")}>
           {t("back")}
         </Button>
+        </div>
       </div>
     )
   }
 
   if (!automation || logs === null) {
     return (
-      <div className="flex h-64 items-center justify-center">
+      <div className={`relative -m-4 min-h-[calc(100vh-0px)] overflow-hidden p-6 sm:-m-6 sm:p-10 ${ASCENT.canvas}`}>
+        <div className="pointer-events-none absolute inset-0 opacity-80">
+          <div className="absolute -left-20 top-12 h-80 w-80 rounded-full bg-[#7B61FF]/14 blur-3xl" />
+          <div className="absolute -right-24 bottom-12 h-[28rem] w-[28rem] rounded-full bg-[#FF4F8A]/9 blur-3xl" />
+        </div>
+        <div className={`relative flex h-64 items-center justify-center rounded-2xl border border-white/10 bg-[linear-gradient(170deg,rgba(255,255,255,0.04),rgba(255,255,255,0.01)_60%)] ${ASCENT.panel}`}>
         <Loader2 className="h-6 w-6 animate-spin text-primary" />
+        </div>
       </div>
     )
   }
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center gap-3">
+    <div className={`relative -m-4 min-h-[calc(100vh-0px)] overflow-hidden space-y-6 p-6 sm:-m-6 sm:p-10 ${ASCENT.canvas}`}>
+      <div className="pointer-events-none absolute inset-0 opacity-80">
+        <div className="absolute -left-20 top-12 h-80 w-80 rounded-full bg-[#7B61FF]/14 blur-3xl" />
+        <div className="absolute -right-24 bottom-12 h-[28rem] w-[28rem] rounded-full bg-[#FF4F8A]/9 blur-3xl" />
+      </div>
+      <div className={`relative flex items-center gap-3 rounded-2xl border border-white/10 bg-[linear-gradient(160deg,rgba(13,14,20,0.82),rgba(42,27,77,0.22)_55%,rgba(13,14,20,0.78))] p-6 shadow-[0_18px_48px_rgba(7,8,18,0.38),inset_0_1px_0_rgba(255,255,255,0.08)] backdrop-blur-[8px] ${ASCENT.panel}`}>
         <button
           type="button"
           onClick={() => router.push("/automations")}
-          className="flex h-8 w-8 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+          className={`flex h-8 w-8 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-muted hover:text-foreground ${ASCENT_INTERACTIVE}`}
           aria-label={t("backAria")}
         >
           <ArrowLeft className="h-4 w-4" />
@@ -101,7 +118,7 @@ export default function AutomationLogsPage({
       </div>
 
       {logs.length === 0 ? (
-        <div className="flex h-48 flex-col items-center justify-center rounded-xl border border-dashed border-border bg-card/40">
+        <div className="flex h-48 flex-col items-center justify-center rounded-2xl border border-dashed border-white/15 bg-[linear-gradient(170deg,rgba(255,255,255,0.05),rgba(255,255,255,0.016)_56%,rgba(255,255,255,0.01))] shadow-[0_16px_36px_rgba(7,8,18,0.36)]">
           <p className="text-sm text-foreground">{t("emptyTitle")}</p>
           <p className="mt-1 text-xs text-muted-foreground">
             {t("emptyDesc")}
@@ -114,7 +131,7 @@ export default function AutomationLogsPage({
             return (
               <li
                 key={log.id}
-                className="rounded-xl border border-border bg-card"
+                className="rounded-2xl border border-white/12 bg-[linear-gradient(170deg,rgba(255,255,255,0.05),rgba(255,255,255,0.018)_54%,rgba(255,255,255,0.01))] shadow-[0_12px_28px_rgba(7,8,18,0.32)]"
               >
                 <button
                   type="button"
@@ -141,7 +158,7 @@ export default function AutomationLogsPage({
                   </div>
                 </button>
                 {isOpen && (
-                  <div className="border-t border-border px-4 py-3">
+                  <div className="border-t border-white/10 px-4 py-3">
                     {log.error_message && (
                       <p className="mb-3 rounded-md border border-red-500/30 bg-red-500/10 px-3 py-2 text-xs text-red-300">
                         {log.error_message}

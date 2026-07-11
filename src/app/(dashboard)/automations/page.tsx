@@ -140,8 +140,12 @@ export default function AutomationsPage() {
 
   if (error) {
     return (
-      <div className={`-m-4 min-h-[calc(100vh-0px)] p-6 sm:-m-6 sm:p-10 ${ASCENT.canvas}`}>
-        <div className={`flex h-64 flex-col items-center justify-center gap-2 ${ASCENT.panel}`}>
+      <div className={`relative -m-4 min-h-[calc(100vh-0px)] overflow-hidden p-6 sm:-m-6 sm:p-10 ${ASCENT.canvas}`}>
+        <div className="pointer-events-none absolute inset-0 opacity-80">
+          <div className="absolute -left-20 top-12 h-80 w-80 rounded-full bg-[#7B61FF]/14 blur-3xl" />
+          <div className="absolute -right-24 bottom-12 h-[28rem] w-[28rem] rounded-full bg-[#FF4F8A]/9 blur-3xl" />
+        </div>
+        <div className={`relative flex h-64 flex-col items-center justify-center gap-2 rounded-2xl border border-white/10 bg-[linear-gradient(170deg,rgba(255,255,255,0.04),rgba(255,255,255,0.01)_60%)] ${ASCENT.panel}`}>
           <p className="text-sm text-[#FF4F8A]">{error}</p>
           <Button variant="outline" onClick={() => window.location.reload()} className={`${ASCENT.outline} ${ASCENT_INTERACTIVE}`}>
           {t("retry")}
@@ -153,8 +157,12 @@ export default function AutomationsPage() {
 
   if (automations === null) {
     return (
-      <div className={`-m-4 min-h-[calc(100vh-0px)] p-6 sm:-m-6 sm:p-10 ${ASCENT.canvas}`}>
-        <div className={`flex h-64 items-center justify-center ${ASCENT.panel}`}>
+      <div className={`relative -m-4 min-h-[calc(100vh-0px)] overflow-hidden p-6 sm:-m-6 sm:p-10 ${ASCENT.canvas}`}>
+        <div className="pointer-events-none absolute inset-0 opacity-80">
+          <div className="absolute -left-20 top-12 h-80 w-80 rounded-full bg-[#7B61FF]/14 blur-3xl" />
+          <div className="absolute -right-24 bottom-12 h-[28rem] w-[28rem] rounded-full bg-[#FF4F8A]/9 blur-3xl" />
+        </div>
+        <div className={`relative flex h-64 items-center justify-center rounded-2xl border border-white/10 bg-[linear-gradient(170deg,rgba(255,255,255,0.04),rgba(255,255,255,0.01)_60%)] ${ASCENT.panel}`}>
           <Loader2 className="h-6 w-6 animate-spin text-[#7B61FF]" />
         </div>
       </div>
@@ -164,8 +172,12 @@ export default function AutomationsPage() {
   const showTemplates = automations.length < 3
 
   return (
-    <div className={`-m-4 min-h-[calc(100vh-0px)] p-6 sm:-m-6 sm:p-10 space-y-8 ${ASCENT.canvas}`}>
-      <div className={`flex items-center justify-between p-6 sm:p-7 ${ASCENT.panel}`}>
+    <div className={`relative -m-4 min-h-[calc(100vh-0px)] overflow-hidden p-6 sm:-m-6 sm:p-10 space-y-8 ${ASCENT.canvas}`}>
+      <div className="pointer-events-none absolute inset-0 opacity-80">
+        <div className="absolute -left-20 top-12 h-80 w-80 rounded-full bg-[#7B61FF]/14 blur-3xl" />
+        <div className="absolute -right-24 bottom-12 h-[28rem] w-[28rem] rounded-full bg-[#FF4F8A]/9 blur-3xl" />
+      </div>
+      <div className={`relative flex items-center justify-between rounded-2xl border border-white/10 bg-[linear-gradient(160deg,rgba(13,14,20,0.82),rgba(42,27,77,0.22)_55%,rgba(13,14,20,0.78))] p-6 shadow-[0_18px_48px_rgba(7,8,18,0.38),inset_0_1px_0_rgba(255,255,255,0.08)] backdrop-blur-[8px] sm:p-7 ${ASCENT.panel}`}>
         <div>
           <h1 className={`text-3xl font-bold tracking-tight ${ASCENT.title}`}>{t("title")}</h1>
           <p className={`mt-2 text-sm ${ASCENT.subtle}`}>
@@ -194,7 +206,7 @@ export default function AutomationsPage() {
                 <button
                   key={slug}
                   onClick={() => startFromTemplate(slug)}
-                  className={`group flex flex-col items-start rounded-xl border bg-[var(--ascent-card)] p-4 text-left hover:bg-[var(--ascent-hover)] ${ASCENT.divider} ${ASCENT_INTERACTIVE}`}
+                  className={`group flex flex-col items-start rounded-2xl border border-white/12 bg-[linear-gradient(170deg,rgba(255,255,255,0.05),rgba(255,255,255,0.018)_54%,rgba(255,255,255,0.01))] p-4 text-left shadow-[0_12px_28px_rgba(7,8,18,0.32)] hover:-translate-y-0.5 hover:border-[#9f8cff]/35 hover:bg-[linear-gradient(170deg,rgba(123,97,255,0.12),rgba(255,255,255,0.02)_65%)] hover:shadow-[0_18px_38px_rgba(12,14,28,0.38)] ${ASCENT.divider} ${ASCENT_INTERACTIVE}`}
                 >
                   <div className="mb-3 flex h-9 w-9 items-center justify-center rounded-lg bg-[#7B61FF]/10 text-[#7B61FF] group-hover:bg-[#7B61FF]/15">
                     <Icon className="h-5 w-5" />
@@ -209,7 +221,7 @@ export default function AutomationsPage() {
       )}
 
       {automations.length === 0 ? (
-        <div className={`flex h-48 flex-col items-center justify-center rounded-xl border border-dashed ${ASCENT.divider} bg-[var(--ascent-card)]`}>
+        <div className={`flex h-48 flex-col items-center justify-center rounded-2xl border border-dashed border-white/15 bg-[linear-gradient(170deg,rgba(255,255,255,0.05),rgba(255,255,255,0.016)_56%,rgba(255,255,255,0.01))] shadow-[0_16px_36px_rgba(7,8,18,0.36)] ${ASCENT.divider}`}>
           <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-[#7B61FF]/10">
             <Zap className="h-6 w-6 text-[#7B61FF]" />
           </div>
@@ -287,10 +299,10 @@ function AutomationCard({
 }) {
   const meta = triggerMeta(automation.trigger_type)
   return (
-    <li className={`rounded-xl border bg-[var(--ascent-card)] hover:bg-[var(--ascent-hover)] ${ASCENT.divider} ${ASCENT_INTERACTIVE}`}>
+    <li className={`rounded-2xl border border-white/12 bg-[linear-gradient(170deg,rgba(255,255,255,0.05),rgba(255,255,255,0.018)_54%,rgba(255,255,255,0.01))] shadow-[0_12px_28px_rgba(7,8,18,0.32)] hover:border-[#9f8cff]/30 hover:bg-[linear-gradient(170deg,rgba(123,97,255,0.12),rgba(255,255,255,0.02)_65%)] hover:shadow-[0_18px_38px_rgba(12,14,28,0.38)] ${ASCENT.divider} ${ASCENT_INTERACTIVE}`}>
       <div className="flex items-center gap-4 p-4">
         <div
-          className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-lg bg-[#7B61FF]/10"
+          className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-lg border border-white/12 bg-[linear-gradient(150deg,rgba(123,97,255,0.2),rgba(255,255,255,0.05))] shadow-[0_8px_18px_rgba(12,14,28,0.3)]"
           aria-hidden
         >
           <Zap className="h-5 w-5 text-[#7B61FF]" />
