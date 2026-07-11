@@ -45,7 +45,7 @@ const STATUS_COLORS: Record<ConversationStatus, string> = {
 
 
 
-type InboxFilter = ConversationStatus | "all" | "unread";
+type StatusTab = ConversationStatus | "all";
 
 export function ConversationList({
   activeConversationId,
@@ -55,17 +55,20 @@ export function ConversationList({
   resyncToken = 0,
 }: ConversationListProps) {
   const t = useTranslations("Inbox.conversationList");
-  
-  const FILTER_OPTIONS: { label: string; value: InboxFilter }[] = useMemo(() => [
-    { label: t("filterAll"), value: "all" },
-    { label: t("filterUnread"), value: "unread" },
-    { label: t("filterOpen"), value: "open" },
-    { label: t("filterPending"), value: "pending" },
-    { label: t("filterClosed"), value: "closed" },
-  ], [t]);
+
+  const STATUS_TABS: { label: string; value: StatusTab }[] = useMemo(
+    () => [
+      { label: t("tabAll"), value: "all" },
+      { label: t("tabInService"), value: "open" },
+      { label: t("tabWaiting"), value: "pending" },
+      { label: t("tabFinished"), value: "closed" },
+    ],
+    [t]
+  );
 
   const [search, setSearch] = useState("");
-  const [filter, setFilter] = useState<InboxFilter>("all");
+  const [statusTab, setStatusTab] = useState<StatusTab>("all");
+  const [unreadOnly, setUnreadOnly] = useState(false);
   const [loading, setLoading] = useState(true);
   // Contact-based filters (issue #272). Tags use OR logic (a conversation
   // matches if its contact carries any selected tag), consistent with
@@ -162,10 +165,12 @@ export function ConversationList({
   const filtered = useMemo(() => {
     let result = conversations;
 
-    if (filter === "unread") {
+    if (statusTab !== "all") {
+      result = result.filter((c) => c.status === statusTab);
+    }
+
+    if (unreadOnly) {
       result = result.filter((c) => c.unread_count > 0);
-    } else if (filter !== "all") {
-      result = result.filter((c) => c.status === filter);
     }
 
     // Contact-based filters (tags via OR logic, exact company match).
@@ -189,7 +194,7 @@ export function ConversationList({
     }
 
     return result;
-  }, [conversations, filter, search, selectedTagIds, selectedCompany]);
+  }, [conversations, statusTab, unreadOnly, search, selectedTagIds, selectedCompany]);
 
   const toggleTag = useCallback((id: string) => {
     setSelectedTagIds((prev) =>
@@ -218,8 +223,6 @@ export function ConversationList({
     [onSelect]
   );
 
-  const activeFilter = FILTER_OPTIONS.find((o) => o.value === filter);
-
   return (
     // w-full on mobile so the list occupies the whole viewport when it's
     // the single pane showing; fixed 320px on desktop where it shares the
@@ -238,31 +241,34 @@ export function ConversationList({
         </div>
 
         <div className="flex flex-wrap items-center gap-1">
-          <DropdownMenu>
-              <DropdownMenuTrigger className={`inline-flex items-center justify-center h-7 gap-1 px-2 text-xs rounded-md hover:bg-[var(--ascent-hover)] ${ASCENT_INTERACTIVE} text-[var(--ascent-subtle)] hover:text-[var(--ascent-title)]`}>
-                {activeFilter?.label ?? t("filterAll")}
-                <ChevronDown className="h-3 w-3" />
-            </DropdownMenuTrigger>
-            <DropdownMenuContent
-              align="start"
-              className={ASCENT.popover}
+          <div className="flex min-w-0 flex-1 items-center gap-1 overflow-x-auto pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+            {STATUS_TABS.map((tab) => (
+              <button
+                key={tab.value}
+                onClick={() => setStatusTab(tab.value)}
+                className={cn(
+                  `inline-flex h-7 shrink-0 items-center justify-center rounded-full border px-3 text-xs font-medium ${ASCENT_INTERACTIVE}`,
+                  statusTab === tab.value
+                    ? "border-[#7B61FF] bg-[#7B61FF] text-white"
+                    : "border-[var(--ascent-border)] text-[var(--ascent-subtle)] hover:bg-[var(--ascent-hover)] hover:text-[var(--ascent-title)]"
+                )}
+              >
+                {tab.label}
+              </button>
+            ))}
+
+            <button
+              onClick={() => setUnreadOnly((prev) => !prev)}
+              className={cn(
+                `inline-flex h-7 shrink-0 items-center justify-center rounded-full border px-3 text-xs font-medium ${ASCENT_INTERACTIVE}`,
+                unreadOnly
+                  ? "border-[#FF4F8A] bg-[#FF4F8A] text-white"
+                  : "border-[var(--ascent-border)] text-[var(--ascent-subtle)] hover:bg-[var(--ascent-hover)] hover:text-[var(--ascent-title)]"
+              )}
             >
-              {FILTER_OPTIONS.map((opt) => (
-                <DropdownMenuItem
-                  key={opt.value}
-                  onClick={() => setFilter(opt.value)}
-                  className={cn(
-                    "text-sm",
-                    filter === opt.value
-                      ? "text-primary"
-                      : "text-[var(--ascent-body)]"
-                  )}
-                >
-                  {opt.label}
-                </DropdownMenuItem>
-              ))}
-            </DropdownMenuContent>
-          </DropdownMenu>
+              {t("filterUnread")}
+            </button>
+          </div>
 
           {tags.length > 0 && (
             <DropdownMenu>

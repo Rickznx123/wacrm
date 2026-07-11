@@ -131,6 +131,10 @@
     },
     "conversationList": {
       "searchPlaceholder": "Pesquisar conversas...",
+      "tabAll": "Todos",
+      "tabInService": "Em atendimento",
+      "tabWaiting": "Em espera",
+      "tabFinished": "Finalizado",
       "filterAll": "Todas",
       "filterUnread": "Não lidas",
       "filterOpen": "Abertas",

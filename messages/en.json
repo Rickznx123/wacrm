@@ -131,6 +131,10 @@
     },
     "conversationList": {
       "searchPlaceholder": "Search conversations...",
+      "tabAll": "All",
+      "tabInService": "In service",
+      "tabWaiting": "On hold",
+      "tabFinished": "Finished",
       "filterAll": "All",
       "filterUnread": "Unread",
       "filterOpen": "Open",
