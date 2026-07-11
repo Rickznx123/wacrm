@@ -240,36 +240,41 @@ export function ConversationList({
           />
         </div>
 
-        <div className="flex flex-wrap items-center gap-1">
-          <div className="flex min-w-0 flex-1 items-center gap-1 overflow-x-auto pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-            {STATUS_TABS.map((tab) => (
+        <div className="space-y-1.5">
+          <div className="relative">
+            <div className="flex min-w-0 items-center gap-0.5 overflow-x-auto pb-1 pr-3 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+              {STATUS_TABS.map((tab) => (
+                <button
+                  key={tab.value}
+                  onClick={() => setStatusTab(tab.value)}
+                  className={cn(
+                    `inline-flex h-7 shrink-0 items-center justify-center rounded-full border px-2.5 text-xs font-medium ${ASCENT_INTERACTIVE}`,
+                    statusTab === tab.value
+                      ? "border-[#7B61FF] bg-[#7B61FF] text-white"
+                      : "border-[var(--ascent-border)] text-[var(--ascent-subtle)] hover:bg-[var(--ascent-hover)] hover:text-[var(--ascent-title)]"
+                  )}
+                >
+                  {tab.label}
+                </button>
+              ))}
+
               <button
-                key={tab.value}
-                onClick={() => setStatusTab(tab.value)}
+                onClick={() => setUnreadOnly((prev) => !prev)}
                 className={cn(
-                  `inline-flex h-7 shrink-0 items-center justify-center rounded-full border px-3 text-xs font-medium ${ASCENT_INTERACTIVE}`,
-                  statusTab === tab.value
-                    ? "border-[#7B61FF] bg-[#7B61FF] text-white"
+                  `inline-flex h-7 shrink-0 items-center justify-center rounded-full border px-2.5 text-xs font-medium ${ASCENT_INTERACTIVE}`,
+                  unreadOnly
+                    ? "border-[#FF4F8A] bg-[#FF4F8A] text-white"
                     : "border-[var(--ascent-border)] text-[var(--ascent-subtle)] hover:bg-[var(--ascent-hover)] hover:text-[var(--ascent-title)]"
                 )}
               >
-                {tab.label}
+                {t("filterUnread")}
               </button>
-            ))}
-
-            <button
-              onClick={() => setUnreadOnly((prev) => !prev)}
-              className={cn(
-                `inline-flex h-7 shrink-0 items-center justify-center rounded-full border px-3 text-xs font-medium ${ASCENT_INTERACTIVE}`,
-                unreadOnly
-                  ? "border-[#FF4F8A] bg-[#FF4F8A] text-white"
-                  : "border-[var(--ascent-border)] text-[var(--ascent-subtle)] hover:bg-[var(--ascent-hover)] hover:text-[var(--ascent-title)]"
-              )}
-            >
-              {t("filterUnread")}
-            </button>
+            </div>
+            <div className="pointer-events-none absolute inset-y-0 left-0 w-4 bg-gradient-to-r from-[var(--ascent-panel)] to-transparent" />
+            <div className="pointer-events-none absolute inset-y-0 right-0 w-6 bg-gradient-to-l from-[var(--ascent-panel)] to-transparent" />
           </div>
 
+          <div className="flex flex-wrap items-center gap-1">
           {tags.length > 0 && (
             <DropdownMenu>
               <DropdownMenuTrigger
@@ -357,6 +362,7 @@ export function ConversationList({
               </DropdownMenuContent>
             </DropdownMenu>
           )}
+          </div>
         </div>
 
         {hasContactFilters && (
