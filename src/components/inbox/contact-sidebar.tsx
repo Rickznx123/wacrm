@@ -121,8 +121,8 @@ export function ContactSidebar({ contact }: ContactSidebarProps) {
 
   if (!contact) {
     return (
-      <div className="flex h-full w-70 items-center justify-center border-l border-border bg-card">
-        <p className="text-sm text-muted-foreground">{tThread("selectConversation")}</p>
+      <div className="flex h-full w-70 items-center justify-center border-l border-[var(--ascent-border)] bg-[var(--ascent-panel)]">
+        <p className="text-sm text-[var(--ascent-subtle)]">{tThread("selectConversation")}</p>
       </div>
     );
   }

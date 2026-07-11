@@ -4,6 +4,7 @@ import { useEffect, useRef, type ReactNode } from 'react';
 import { useTranslations } from 'next-intl';
 
 import { cn } from '@/lib/utils';
+import { ASCENT, ASCENT_INTERACTIVE } from '@/lib/ui/ascent';
 import {
   RAIL_GROUPS,
   SECTION_META,
@@ -51,7 +52,7 @@ export function SettingsRail({
       aria-label="Settings sections"
       className={cn(
         'flex gap-1 overflow-x-auto pb-2 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden',
-        'border-b border-border',
+        `border-b ${ASCENT.divider}`,
         'lg:sticky lg:top-0 lg:flex-col lg:overflow-visible lg:border-b-0 lg:pb-0',
       )}
     >
@@ -65,7 +66,7 @@ export function SettingsRail({
             className="flex shrink-0 gap-1 lg:flex-col lg:gap-0.5"
           >
             {label ? (
-              <div className="hidden px-3 pt-3.5 pb-1.5 text-[11px] font-semibold tracking-[0.09em] text-muted-foreground uppercase lg:block">
+              <div className={`hidden px-3 pt-3.5 pb-1.5 text-[11px] font-semibold tracking-[0.09em] uppercase lg:block ${ASCENT.subtle}`}>
                 {t(`groups.${group}`)}
               </div>
             ) : null}
@@ -81,11 +82,11 @@ export function SettingsRail({
                   onClick={() => onSelect(s)}
                   aria-current={isActive ? 'page' : undefined}
                   className={cn(
-                    'flex shrink-0 items-center gap-2.5 rounded-lg px-3 py-2 text-left text-sm font-medium whitespace-nowrap transition-colors',
+                    `flex shrink-0 items-center gap-2.5 rounded-lg border border-transparent px-3 py-2 text-left text-sm font-medium whitespace-nowrap ${ASCENT_INTERACTIVE}`,
                     'lg:w-full',
                     isActive
-                      ? 'bg-primary-soft text-primary'
-                      : 'text-muted-foreground hover:bg-muted hover:text-foreground',
+                      ? 'bg-[#7B61FF]/12 text-[#7B61FF] border-[#7B61FF]'
+                      : `border-transparent ${ASCENT.subtle} hover:bg-[var(--ascent-hover)] hover:text-[var(--ascent-title)]`,
                   )}
                 >
                   <Icon className="size-4 shrink-0" />
@@ -94,7 +95,7 @@ export function SettingsRail({
                     <span
                       className={cn(
                         'hidden items-center gap-1.5 text-xs lg:inline-flex',
-                        isActive ? 'text-primary' : 'text-muted-foreground',
+                        isActive ? 'text-[#7B61FF]' : ASCENT.subtle,
                       )}
                     >
                       {hints[s]}

@@ -27,6 +27,7 @@ type ParsedInboundMessage = {
   messageId: string
   phone: string
   name: string
+  profilePicUrl: string | null
   contentType: 'text' | 'image' | 'video' | 'audio' | 'document' | 'location'
   text: string | null
   mediaUrl: string | null
@@ -156,6 +157,34 @@ function phoneFromJid(raw: string | null): string | null {
   return digits.startsWith('+') ? digits : `+${digits}`
 }
 
+function isGroupOrBroadcastMessage(raw: Record<string, unknown>, remoteJid: string | null): boolean {
+  const key = asObject(raw.key)
+  if (key.isGroup === true || raw.isGroup === true) return true
+  if (!remoteJid) return false
+  const jid = remoteJid.toLowerCase()
+  return jid.endsWith('@g.us') || jid.includes('broadcast')
+}
+
+function extractProfilePicUrl(raw: Record<string, unknown>): string | null {
+  const candidates = [
+    raw,
+    asObject(raw.contact),
+    asObject(raw.sender),
+    asObject(raw.pushNameData),
+  ]
+
+  for (const candidate of candidates) {
+    const value =
+      asString(candidate.profilePicUrl) ||
+      asString(candidate.profilePictureUrl) ||
+      asString(candidate.picture) ||
+      asString(candidate.photo)
+    if (value) return value
+  }
+
+  return null
+}
+
 function mapAckToStatus(value: unknown): EvolutionStatus | null {
   if (typeof value === 'string') {
     const normalized = value.toLowerCase()
@@ -226,11 +255,13 @@ function parseInboundMessage(raw: Record<string, unknown>): ParsedInboundMessage
   // Use Evolution's official message id (key.id) as the idempotency key.
   const messageId = asString(key.id)
   const remoteJid = asString(key.remoteJid) || asString(raw.remoteJid)
+  if (isGroupOrBroadcastMessage(raw, remoteJid)) return null
   const phone = phoneFromJid(remoteJid) || asString(raw.phone)
   if (!messageId || !phone) return null
 
   const msg = asObject(raw.message)
   const pushName = asString(raw.pushName) || asString(raw.notifyName) || phone
+  const profilePicUrl = extractProfilePicUrl(raw)
   const timestampIso = parseTimestamp(raw.messageTimestamp || raw.timestamp)
 
   const textConversation = asString(msg.conversation)
@@ -239,6 +270,7 @@ function parseInboundMessage(raw: Record<string, unknown>): ParsedInboundMessage
       messageId,
       phone: normalizePhone(phone),
       name: pushName,
+      profilePicUrl,
       contentType: 'text',
       text: textConversation,
       mediaUrl: null,
@@ -252,6 +284,7 @@ function parseInboundMessage(raw: Record<string, unknown>): ParsedInboundMessage
       messageId,
       phone: normalizePhone(phone),
       name: pushName,
+      profilePicUrl,
       contentType: 'text',
       text: asString(extended.text),
       mediaUrl: null,
@@ -265,6 +298,7 @@ function parseInboundMessage(raw: Record<string, unknown>): ParsedInboundMessage
       messageId,
       phone: normalizePhone(phone),
       name: pushName,
+      profilePicUrl,
       contentType: 'image',
       text: asString(image.caption),
       mediaUrl: asString(image.url) || asString(image.directPath) || null,
@@ -278,6 +312,7 @@ function parseInboundMessage(raw: Record<string, unknown>): ParsedInboundMessage
       messageId,
       phone: normalizePhone(phone),
       name: pushName,
+      profilePicUrl,
       contentType: 'video',
       text: asString(video.caption),
       mediaUrl: asString(video.url) || asString(video.directPath) || null,
@@ -291,6 +326,7 @@ function parseInboundMessage(raw: Record<string, unknown>): ParsedInboundMessage
       messageId,
       phone: normalizePhone(phone),
       name: pushName,
+      profilePicUrl,
       contentType: 'document',
       text: asString(document.fileName),
       mediaUrl: asString(document.url) || asString(document.directPath) || null,
@@ -304,6 +340,7 @@ function parseInboundMessage(raw: Record<string, unknown>): ParsedInboundMessage
       messageId,
       phone: normalizePhone(phone),
       name: pushName,
+      profilePicUrl,
       contentType: 'audio',
       text: null,
       mediaUrl: asString(audio.url) || asString(audio.directPath) || null,
@@ -326,6 +363,7 @@ function parseInboundMessage(raw: Record<string, unknown>): ParsedInboundMessage
       messageId,
       phone: normalizePhone(phone),
       name: pushName,
+      profilePicUrl,
       contentType: 'location',
       text: locText || '[Location]',
       mediaUrl: null,
@@ -337,6 +375,7 @@ function parseInboundMessage(raw: Record<string, unknown>): ParsedInboundMessage
     messageId,
     phone: normalizePhone(phone),
     name: pushName,
+    profilePicUrl,
     contentType: 'text',
     text: '[Unsupported Evolution message]',
     mediaUrl: null,
@@ -421,13 +460,30 @@ async function resolveAccountOwnerUserId(accountId: string): Promise<string | nu
   return data.owner_user_id
 }
 
-async function findOrCreateContact(accountId: string, ownerUserId: string, phone: string, name: string) {
+async function findOrCreateContact(
+  accountId: string,
+  ownerUserId: string,
+  phone: string,
+  name: string,
+  profilePicUrl: string | null,
+) {
   const existing = await findExistingContact(supabaseAdmin(), accountId, phone)
   if (existing) {
+    const updates: Record<string, unknown> = {}
     if (name && name !== existing.name) {
+      updates.name = name
+    }
+    if (
+      profilePicUrl &&
+      profilePicUrl !== String(existing.avatar_url ?? '')
+    ) {
+      updates.avatar_url = profilePicUrl
+    }
+
+    if (Object.keys(updates).length > 0) {
       await supabaseAdmin()
         .from('contacts')
-        .update({ name, updated_at: new Date().toISOString() })
+        .update({ ...updates, updated_at: new Date().toISOString() })
         .eq('id', existing.id)
     }
     return existing
@@ -440,6 +496,7 @@ async function findOrCreateContact(accountId: string, ownerUserId: string, phone
       user_id: ownerUserId,
       phone,
       name: name || phone,
+      avatar_url: profilePicUrl,
     })
     .select('id, phone, name')
     .single()
@@ -483,7 +540,13 @@ async function persistInboundMessage(
   msg: ParsedInboundMessage,
   logCtx: WebhookLogContext,
 ) {
-  const contact = await findOrCreateContact(accountId, ownerUserId, msg.phone, msg.name)
+  const contact = await findOrCreateContact(
+    accountId,
+    ownerUserId,
+    msg.phone,
+    msg.name,
+    msg.profilePicUrl,
+  )
   if (!contact) return 'permanent_error' as ProcessingResult
 
   const conv = await findOrCreateConversation(accountId, ownerUserId, contact.id)

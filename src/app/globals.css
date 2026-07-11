@@ -217,6 +217,50 @@ html[data-theme="rose"] {
   --sidebar-ring: oklch(0.645 0.22 16);
 }
 
+/* Ascent UI tokens scoped for redesigned CRM surfaces. */
+:root,
+html[data-mode="dark"] {
+  --ascent-brand-gradient: linear-gradient(135deg, #ff4f8a 0%, #7b61ff 100%);
+  --ascent-brand-glow: 0 10px 24px rgba(123, 97, 255, 0.3);
+  --ascent-canvas: #0d0e14;
+  --ascent-panel: #2a1b4d;
+  --ascent-card: #2a1b4d;
+  --ascent-field: #22163f;
+  --ascent-border: rgba(255, 255, 255, 0.12);
+  --ascent-hover: rgba(255, 255, 255, 0.08);
+  --ascent-title: #ffffff;
+  --ascent-subtle: rgba(255, 255, 255, 0.72);
+  --ascent-body: rgba(255, 255, 255, 0.88);
+  --ascent-tertiary: rgba(255, 255, 255, 0.58);
+  --ascent-outline-bg: #2a1b4d;
+  --ascent-outline-border: rgba(255, 255, 255, 0.16);
+  --ascent-outline-text: rgba(255, 255, 255, 0.82);
+  --ascent-panel-shadow: 0 8px 24px rgba(0, 0, 0, 0.32);
+  --ascent-card-shadow: 0 6px 18px rgba(0, 0, 0, 0.28);
+  --ascent-popover-shadow: 0 12px 28px rgba(0, 0, 0, 0.34);
+}
+
+html[data-mode="light"] {
+  --ascent-brand-gradient: linear-gradient(135deg, #ff4f8a 0%, #7b61ff 100%);
+  --ascent-brand-glow: 0 10px 22px rgba(123, 97, 255, 0.24);
+  --ascent-canvas: #f2f2f5;
+  --ascent-panel: #ffffff;
+  --ascent-card: #ffffff;
+  --ascent-field: #ffffff;
+  --ascent-border: #f2f2f5;
+  --ascent-hover: #f8f8fc;
+  --ascent-title: #0d0e14;
+  --ascent-subtle: #6c7082;
+  --ascent-body: #2b2f3f;
+  --ascent-tertiary: #85899a;
+  --ascent-outline-bg: #ffffff;
+  --ascent-outline-border: #e7e8ee;
+  --ascent-outline-text: #42465b;
+  --ascent-panel-shadow: 0 8px 24px rgba(13, 14, 20, 0.06);
+  --ascent-card-shadow: 0 6px 18px rgba(13, 14, 20, 0.06);
+  --ascent-popover-shadow: 0 12px 28px rgba(13, 14, 20, 0.12);
+}
+
 @layer base {
   * {
     @apply border-border outline-ring/50;
@@ -226,5 +270,20 @@ html[data-theme="rose"] {
   }
   html {
     @apply font-sans;
+  }
+}
+
+@layer utilities {
+  .ascent-brand-gradient-bg {
+    background-image: var(--ascent-brand-gradient);
+  }
+
+  .ascent-brand-gradient-border {
+    background-image: var(--ascent-brand-gradient);
+    box-shadow: var(--ascent-brand-glow);
+  }
+
+  .ascent-brand-glow {
+    box-shadow: var(--ascent-brand-glow);
   }
 }

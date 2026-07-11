@@ -20,6 +20,7 @@ type DbState = {
   ownerUserId: string
   conversation: ConversationRow
   messages: MessageRow[]
+  contactUpdates: Array<{ id: string | null; payload: Record<string, unknown> }>
   conversationUpdates: number
   messageLookupMode: 'normal' | 'miss'
   rpcInsertMode: 'ok' | 'fail_transient' | 'fail_permanent'
@@ -134,6 +135,14 @@ const createClientMock = vi.fn(() => {
           if (row && typeof ctx.updatePayload.status === 'string') {
             row.status = ctx.updatePayload.status
           }
+          return { error: null }
+        }
+
+        if (ctx.table === 'contacts') {
+          dbState.contactUpdates.push({
+            id: typeof ctx.filters.id === 'string' ? ctx.filters.id : null,
+            payload: ctx.updatePayload,
+          })
           return { error: null }
         }
 
@@ -266,6 +275,7 @@ const findExistingContactMock = vi.fn(async () => ({
   id: 'contact-1',
   phone: '+5511999999999',
   name: 'Cliente',
+  avatar_url: null,
 }))
 
 const dispatchWebhookEventMock = vi.fn(async () => undefined)
@@ -309,6 +319,7 @@ describe('Evolution webhook idempotency', () => {
         last_message_text: null,
       },
       messages: [],
+      contactUpdates: [],
       conversationUpdates: 0,
       messageLookupMode: 'normal',
       rpcInsertMode: 'ok',
@@ -542,5 +553,112 @@ describe('Evolution webhook idempotency', () => {
     )
     expect(finishEntry?.outcome).toBe('transient_error')
     expect(finishEntry?.httpStatus).toBe(503)
+  })
+
+  it('ignores inbound messages flagged as groups', async () => {
+    const payload = {
+      instance: 'inst-1',
+      event: 'messages.upsert',
+      data: {
+        messages: [
+          {
+            key: {
+              id: 'evo-msg-group-1',
+              remoteJid: '5511999999999@s.whatsapp.net',
+              fromMe: false,
+              isGroup: true,
+            },
+            messageTimestamp: 1_700_000_000,
+            pushName: 'Grupo',
+            message: {
+              conversation: 'mensagem de grupo',
+            },
+          },
+        ],
+      },
+    }
+
+    const response = await sendEventOnce(payload)
+
+    expect(response.status).toBe(200)
+    expect(dbState.messages).toHaveLength(0)
+    expect(dbState.conversationUpdates).toBe(0)
+  })
+
+  it('ignores inbound messages with @g.us or broadcast JIDs', async () => {
+    const groupPayload = {
+      instance: 'inst-1',
+      event: 'messages.upsert',
+      data: {
+        messages: [
+          {
+            key: {
+              id: 'evo-msg-group-jid',
+              remoteJid: '123456@g.us',
+              fromMe: false,
+            },
+            messageTimestamp: 1_700_000_000,
+            message: {
+              conversation: 'grupo',
+            },
+          },
+          {
+            key: {
+              id: 'evo-msg-broadcast-jid',
+              remoteJid: 'status@broadcast',
+              fromMe: false,
+            },
+            messageTimestamp: 1_700_000_001,
+            message: {
+              conversation: 'lista',
+            },
+          },
+        ],
+      },
+    }
+
+    const response = await sendEventOnce(groupPayload)
+
+    expect(response.status).toBe(200)
+    expect(dbState.messages).toHaveLength(0)
+    expect(dbState.conversationUpdates).toBe(0)
+  })
+
+  it('persists contact avatar_url when profilePicUrl is present', async () => {
+    const payload = {
+      instance: 'inst-1',
+      event: 'messages.upsert',
+      data: {
+        messages: [
+          {
+            key: {
+              id: 'evo-msg-avatar-1',
+              remoteJid: '5511999999999@s.whatsapp.net',
+              fromMe: false,
+            },
+            messageTimestamp: 1_700_000_000,
+            pushName: 'Cliente',
+            profilePicUrl: 'https://cdn.example.com/avatar.jpg',
+            message: {
+              conversation: 'oi',
+            },
+          },
+        ],
+      },
+    }
+
+    const response = await sendEventOnce(payload)
+
+    expect(response.status).toBe(200)
+    expect(dbState.contactUpdates).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          id: 'contact-1',
+          payload: expect.objectContaining({
+            avatar_url: 'https://cdn.example.com/avatar.jpg',
+          }),
+        }),
+      ]),
+    )
   })
 })

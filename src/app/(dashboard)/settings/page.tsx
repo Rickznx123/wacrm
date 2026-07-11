@@ -22,6 +22,7 @@ import {
   resolveSection,
   type SettingsSection,
 } from '@/components/settings/settings-sections';
+import { ASCENT } from '@/lib/ui/ascent';
 
 export default function SettingsPage() {
   const router = useRouter();
@@ -68,17 +69,17 @@ export default function SettingsPage() {
   };
 
   return (
-    <div>
-      <div>
-        <h1 className="text-2xl font-bold tracking-tight text-foreground">
+    <div className={`-m-4 min-h-[calc(100vh-0px)] p-6 sm:-m-6 sm:p-10 space-y-8 ${ASCENT.canvas}`}>
+      <div className={`p-6 sm:p-7 ${ASCENT.panel}`}>
+        <h1 className={`text-3xl font-bold tracking-tight ${ASCENT.title}`}>
           {t('pageTitle')}
         </h1>
-        <p className="mt-1 text-sm text-muted-foreground">
+        <p className={`mt-2 text-sm ${ASCENT.subtle}`}>
           {t('pageDesc')}
         </p>
       </div>
 
-      <div className="mt-6 grid gap-6 lg:grid-cols-[236px_minmax(0,1fr)] lg:items-start">
+      <div className={`grid gap-6 lg:grid-cols-[236px_minmax(0,1fr)] lg:items-start ${ASCENT.panel} p-6`}>
         <SettingsRail active={section} onSelect={go} hints={hints} />
         <div className="min-w-0">{panel[section]}</div>
       </div>

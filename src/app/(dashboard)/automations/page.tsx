@@ -43,6 +43,7 @@ import {
 import { AUTOMATION_TEMPLATES, type TemplateSlug } from "@/lib/automations/templates"
 import { triggerMeta, formatRelative } from "@/lib/automations/trigger-meta"
 import { cn } from "@/lib/utils"
+import { ASCENT, ASCENT_INTERACTIVE } from "@/lib/ui/ascent"
 
 const TEMPLATE_ORDER: TemplateSlug[] = [
   "welcome_message",
@@ -139,19 +140,23 @@ export default function AutomationsPage() {
 
   if (error) {
     return (
-      <div className="flex h-64 flex-col items-center justify-center gap-2">
-        <p className="text-sm text-red-400">{error}</p>
-        <Button variant="outline" onClick={() => window.location.reload()}>
+      <div className={`-m-4 min-h-[calc(100vh-0px)] p-6 sm:-m-6 sm:p-10 ${ASCENT.canvas}`}>
+        <div className={`flex h-64 flex-col items-center justify-center gap-2 ${ASCENT.panel}`}>
+          <p className="text-sm text-[#FF4F8A]">{error}</p>
+          <Button variant="outline" onClick={() => window.location.reload()} className={`${ASCENT.outline} ${ASCENT_INTERACTIVE}`}>
           {t("retry")}
-        </Button>
+          </Button>
+        </div>
       </div>
     )
   }
 
   if (automations === null) {
     return (
-      <div className="flex h-64 items-center justify-center">
-        <Loader2 className="h-6 w-6 animate-spin text-primary" />
+      <div className={`-m-4 min-h-[calc(100vh-0px)] p-6 sm:-m-6 sm:p-10 ${ASCENT.canvas}`}>
+        <div className={`flex h-64 items-center justify-center ${ASCENT.panel}`}>
+          <Loader2 className="h-6 w-6 animate-spin text-[#7B61FF]" />
+        </div>
       </div>
     )
   }
@@ -159,11 +164,11 @@ export default function AutomationsPage() {
   const showTemplates = automations.length < 3
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
+    <div className={`-m-4 min-h-[calc(100vh-0px)] p-6 sm:-m-6 sm:p-10 space-y-8 ${ASCENT.canvas}`}>
+      <div className={`flex items-center justify-between p-6 sm:p-7 ${ASCENT.panel}`}>
         <div>
-          <h1 className="text-2xl font-bold text-foreground">{t("title")}</h1>
-          <p className="mt-1 text-sm text-muted-foreground">
+          <h1 className={`text-3xl font-bold tracking-tight ${ASCENT.title}`}>{t("title")}</h1>
+          <p className={`mt-2 text-sm ${ASCENT.subtle}`}>
             {t("subtitle")}
           </p>
         </div>
@@ -171,7 +176,7 @@ export default function AutomationsPage() {
           canAct={canCreate}
           gateReason="create automations"
           onClick={() => router.push("/automations/new")}
-          className="bg-primary text-primary-foreground hover:bg-primary/90"
+          className={`${ASCENT.primary} ${ASCENT_INTERACTIVE}`}
         >
           <Plus className="h-4 w-4" />
           {t("create")}
@@ -180,7 +185,7 @@ export default function AutomationsPage() {
 
       {showTemplates && (
         <section>
-          <h2 className="mb-3 text-sm font-semibold text-muted-foreground">{t("templatesTitle")}</h2>
+          <h2 className={`mb-3 text-sm font-semibold ${ASCENT.subtle}`}>{t("templatesTitle")}</h2>
           <div className="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-4">
             {TEMPLATE_ORDER.map((slug) => {
               const t = AUTOMATION_TEMPLATES[slug]
@@ -189,13 +194,13 @@ export default function AutomationsPage() {
                 <button
                   key={slug}
                   onClick={() => startFromTemplate(slug)}
-                  className="group flex flex-col items-start rounded-xl border border-border bg-card p-4 text-left transition-colors hover:border-primary/50 hover:bg-card/80"
+                  className={`group flex flex-col items-start rounded-xl border bg-[var(--ascent-card)] p-4 text-left hover:bg-[var(--ascent-hover)] ${ASCENT.divider} ${ASCENT_INTERACTIVE}`}
                 >
-                  <div className="mb-3 flex h-9 w-9 items-center justify-center rounded-lg bg-primary/10 text-primary group-hover:bg-primary/15">
+                  <div className="mb-3 flex h-9 w-9 items-center justify-center rounded-lg bg-[#7B61FF]/10 text-[#7B61FF] group-hover:bg-[#7B61FF]/15">
                     <Icon className="h-5 w-5" />
                   </div>
-                  <div className="text-sm font-semibold text-foreground">{t.name}</div>
-                  <p className="mt-1 text-xs text-muted-foreground">{t.description}</p>
+                  <div className={`text-sm font-semibold ${ASCENT.title}`}>{t.name}</div>
+                  <p className={`mt-1 text-xs ${ASCENT.subtle}`}>{t.description}</p>
                 </button>
               )
             })}
@@ -204,12 +209,12 @@ export default function AutomationsPage() {
       )}
 
       {automations.length === 0 ? (
-        <div className="flex h-48 flex-col items-center justify-center rounded-xl border border-dashed border-border bg-card/40">
-          <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-primary/10">
-            <Zap className="h-6 w-6 text-primary" />
+        <div className={`flex h-48 flex-col items-center justify-center rounded-xl border border-dashed ${ASCENT.divider} bg-[var(--ascent-card)]`}>
+          <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-[#7B61FF]/10">
+            <Zap className="h-6 w-6 text-[#7B61FF]" />
           </div>
-          <p className="mt-3 text-sm font-medium text-foreground">{t("emptyTitle")}</p>
-          <p className="mt-1 text-xs text-muted-foreground">
+          <p className={`mt-3 text-sm font-medium ${ASCENT.title}`}>{t("emptyTitle")}</p>
+          <p className={`mt-1 text-xs ${ASCENT.subtle}`}>
             {t("emptyDesc")}
           </p>
         </div>
@@ -231,10 +236,10 @@ export default function AutomationsPage() {
       )}
 
       <Dialog open={!!pendingDelete} onOpenChange={(v) => !v && setPendingDelete(null)}>
-        <DialogContent>
+        <DialogContent className={ASCENT.popover}>
           <DialogHeader>
-            <DialogTitle>{t("deleteTitle")}</DialogTitle>
-            <DialogDescription>
+            <DialogTitle className={ASCENT.title}>{t("deleteTitle")}</DialogTitle>
+            <DialogDescription className={ASCENT.subtle}>
               {t("deleteDesc", { name: pendingDelete?.name ?? "" })}
             </DialogDescription>
           </DialogHeader>
@@ -243,6 +248,7 @@ export default function AutomationsPage() {
               variant="ghost"
               onClick={() => setPendingDelete(null)}
               disabled={deleting}
+              className={`${ASCENT.ghost} ${ASCENT_INTERACTIVE}`}
             >
               {t("cancel")}
             </Button>
@@ -250,6 +256,7 @@ export default function AutomationsPage() {
               variant="destructive"
               onClick={confirmDelete}
               disabled={deleting}
+              className={ASCENT_INTERACTIVE}
             >
               {deleting ? <Loader2 className="h-4 w-4 animate-spin" /> : <Trash2 className="h-4 w-4" />}
               {t("delete")}
@@ -280,35 +287,35 @@ function AutomationCard({
 }) {
   const meta = triggerMeta(automation.trigger_type)
   return (
-    <li className="rounded-xl border border-border bg-card transition-colors hover:border-border">
+    <li className={`rounded-xl border bg-[var(--ascent-card)] hover:bg-[var(--ascent-hover)] ${ASCENT.divider} ${ASCENT_INTERACTIVE}`}>
       <div className="flex items-center gap-4 p-4">
         <div
-          className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-lg bg-primary/10"
+          className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-lg bg-[#7B61FF]/10"
           aria-hidden
         >
-          <Zap className="h-5 w-5 text-primary" />
+          <Zap className="h-5 w-5 text-[#7B61FF]" />
         </div>
 
         <button
           type="button"
           onClick={onEdit}
-          className="min-w-0 flex-1 text-left"
+          className={`min-w-0 flex-1 text-left rounded-lg ${ASCENT_INTERACTIVE}`}
         >
           <div className="flex items-center gap-2">
-            <span className="truncate text-sm font-semibold text-foreground">
+            <span className={`truncate text-sm font-semibold ${ASCENT.title}`}>
               {automation.name}
             </span>
             {automation.is_active && (
               <span className="relative flex h-2 w-2" aria-label="active">
-                <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-primary opacity-75" />
-                <span className="relative inline-flex h-2 w-2 rounded-full bg-primary" />
+                <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-[#FF4F8A] opacity-75" />
+                <span className="relative inline-flex h-2 w-2 rounded-full bg-[#FF4F8A]" />
               </span>
             )}
           </div>
           {automation.description && (
-            <p className="mt-0.5 truncate text-xs text-muted-foreground">{automation.description}</p>
+            <p className={`mt-0.5 truncate text-xs ${ASCENT.subtle}`}>{automation.description}</p>
           )}
-          <div className="mt-2 flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
+          <div className={`mt-2 flex flex-wrap items-center gap-2 text-xs ${ASCENT.subtle}`}>
             <span
               className={cn(
                 "inline-flex items-center rounded-full border px-2 py-0.5 text-[11px] font-medium",
@@ -337,24 +344,24 @@ function AutomationCard({
           <DropdownMenu>
             <DropdownMenuTrigger
               aria-label="Open menu"
-              className="inline-flex h-8 w-8 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-muted hover:text-foreground data-[popup-open]:bg-muted"
+              className={`inline-flex h-8 w-8 items-center justify-center rounded-md ${ASCENT.subtle} hover:bg-[var(--ascent-hover)] hover:text-[var(--ascent-title)] data-[popup-open]:bg-[var(--ascent-hover)] ${ASCENT_INTERACTIVE}`}
             >
               <MoreVertical className="h-4 w-4" />
             </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
-              <DropdownMenuItem onClick={onEdit}>
+            <DropdownMenuContent align="end" className={ASCENT.popover}>
+              <DropdownMenuItem onClick={onEdit} className="text-[var(--ascent-body)] focus:bg-[var(--ascent-hover)] focus:text-[var(--ascent-title)]">
                 <Pencil className="h-4 w-4" />
                 {t("edit")}
               </DropdownMenuItem>
-              <DropdownMenuItem onClick={onDuplicate}>
+              <DropdownMenuItem onClick={onDuplicate} className="text-[var(--ascent-body)] focus:bg-[var(--ascent-hover)] focus:text-[var(--ascent-title)]">
                 <Copy className="h-4 w-4" />
                 {t("duplicate")}
               </DropdownMenuItem>
-              <DropdownMenuItem onClick={onLogs}>
+              <DropdownMenuItem onClick={onLogs} className="text-[var(--ascent-body)] focus:bg-[var(--ascent-hover)] focus:text-[var(--ascent-title)]">
                 <FileText className="h-4 w-4" />
                 {t("viewLogs")}
               </DropdownMenuItem>
-              <DropdownMenuSeparator />
+              <DropdownMenuSeparator className={ASCENT.divider} />
               <DropdownMenuItem variant="destructive" onClick={onDelete}>
                 <Trash2 className="h-4 w-4" />
                 {t("delete")}

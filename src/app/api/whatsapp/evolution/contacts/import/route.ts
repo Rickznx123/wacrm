@@ -33,6 +33,7 @@ export async function POST() {
         const result = await findOrCreateContact(ctx.supabase, ctx.accountId, ctx.userId, {
           phone: contact.phone,
           name: contact.name ?? undefined,
+          avatar_url: contact.profilePicUrl ?? undefined,
         })
 
         if (result.created) imported++

@@ -16,6 +16,7 @@ import { ContactSidebar } from "@/components/inbox/contact-sidebar";
 import { toast } from "sonner";
 import { WifiOff } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { ASCENT } from "@/lib/ui/ascent";
 
 // Remembers the agent's show/hide choice for the desktop contact panel
 // across reloads and sessions (device-scoped, like the theme prefs).
@@ -551,13 +552,14 @@ export default function InboxPage() {
   const hasActiveConv = !!activeConversation;
 
   return (
-    <div className="-m-4 flex h-[calc(100vh-3.5rem)] flex-col overflow-hidden sm:-m-6">
+    <div className={`-m-4 sm:-m-6 p-4 sm:p-6 h-[calc(100vh-3.5rem)] ${ASCENT.canvas}`}>
+      <div className={`flex h-full flex-col overflow-hidden ${ASCENT.panel}`}>
       {/* WhatsApp connection banner — in the flex column, not absolute,
           so it pushes the panels down instead of overlapping them. */}
       {whatsappConnected === false && (
-        <div className="flex shrink-0 items-center justify-center gap-2 border-b border-amber-500/20 bg-amber-500/10 px-4 py-2">
-          <WifiOff className="h-4 w-4 text-amber-400" />
-          <p className="text-xs text-amber-400">
+        <div className="flex shrink-0 items-center justify-center gap-2 border-b border-[#FF4F8A]/20 bg-[#FF4F8A]/8 px-4 py-2">
+          <WifiOff className="h-4 w-4 text-[#FF4F8A]" />
+          <p className="text-xs text-[#FF4F8A]">
             {t("whatsappNotConnected")}
           </p>
         </div>
@@ -624,6 +626,7 @@ export default function InboxPage() {
             <ContactSidebar contact={activeContact} />
           </div>
         )}
+      </div>
       </div>
     </div>
   );

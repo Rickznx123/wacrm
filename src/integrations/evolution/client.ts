@@ -255,28 +255,37 @@ export const evolutionProvider: EvolutionProvider = {
     })
     const list = Array.isArray(payload) ? payload : []
 
-    return list
-      .map((item) => {
-        const obj = item && typeof item === 'object' ? (item as Record<string, unknown>) : {}
-        // The phone JID lives in `remoteJid` (e.g. "5599...@s.whatsapp.net");
-        // `id` is an internal cuid, not a number. Groups are flagged with
-        // `isGroup: true` rather than a "@g.us" suffix on the id.
-        const jid = typeof obj.remoteJid === 'string' ? obj.remoteJid : ''
-        if (!jid || obj.isGroup === true || jid.endsWith('@g.us') || jid.includes('broadcast')) {
-          return null
-        }
+    const contacts: Array<{ phone: string; name: string | null; profilePicUrl?: string | null }> = []
 
-        const digits = jid.split('@')[0]
-        if (!digits || !/^\d+$/.test(digits)) return null
+    for (const item of list) {
+      const obj = item && typeof item === 'object' ? (item as Record<string, unknown>) : {}
+      // The phone JID lives in `remoteJid` (e.g. "5599...@s.whatsapp.net");
+      // `id` is an internal cuid, not a number. Groups are flagged with
+      // `isGroup: true` rather than a "@g.us" suffix on the id.
+      const jid = typeof obj.remoteJid === 'string' ? obj.remoteJid : ''
+      if (!jid || obj.isGroup === true || jid.endsWith('@g.us') || jid.includes('broadcast')) {
+        continue
+      }
 
-        const name =
-          (typeof obj.pushName === 'string' && obj.pushName) ||
-          (typeof obj.name === 'string' && obj.name) ||
-          null
+      const digits = jid.split('@')[0]
+      if (!digits || !/^\d+$/.test(digits)) continue
 
-        return { phone: `+${digits}`, name }
-      })
-      .filter((contact): contact is { phone: string; name: string | null } => contact != null)
+      const name =
+        (typeof obj.pushName === 'string' && obj.pushName) ||
+        (typeof obj.name === 'string' && obj.name) ||
+        null
+
+      const profilePicUrl =
+        (typeof obj.profilePicUrl === 'string' && obj.profilePicUrl) ||
+        (typeof obj.profilePictureUrl === 'string' && obj.profilePictureUrl) ||
+        (typeof obj.picture === 'string' && obj.picture) ||
+        (typeof obj.photo === 'string' && obj.photo) ||
+        null
+
+      contacts.push({ phone: `+${digits}`, name, profilePicUrl })
+    }
+
+    return contacts
   },
 
   async readState(instanceId) {

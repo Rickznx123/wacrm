@@ -98,6 +98,7 @@ export interface ContactInput {
   name?: string | null;
   email?: string | null;
   company?: string | null;
+  avatar_url?: string | null;
 }
 
 /**
@@ -121,7 +122,22 @@ export async function findOrCreateContact(
   }
 
   const existing = await findExistingContact(db, accountId, sanitized);
-  if (existing) return { id: existing.id, created: false };
+  if (existing) {
+    if (
+      typeof input.avatar_url === 'string' &&
+      input.avatar_url.length > 0 &&
+      input.avatar_url !== String(existing.avatar_url ?? '')
+    ) {
+      const { error: updateError } = await db
+        .from('contacts')
+        .update({ avatar_url: input.avatar_url })
+        .eq('id', existing.id);
+      if (updateError) {
+        console.error('[api/v1/contacts] avatar update error:', updateError);
+      }
+    }
+    return { id: existing.id, created: false };
+  }
 
   const { data: created, error } = await db
     .from('contacts')
@@ -132,6 +148,7 @@ export async function findOrCreateContact(
       name: input.name ?? sanitized,
       email: input.email ?? null,
       company: input.company ?? null,
+      avatar_url: input.avatar_url ?? null,
     })
     .select('id')
     .single();

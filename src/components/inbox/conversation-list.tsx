@@ -12,6 +12,7 @@ import type { Conversation, ConversationStatus, Tag } from "@/types";
 import { Search, ChevronDown, X } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 import { useTranslations } from "next-intl";
+import { ASCENT, ASCENT_INTERACTIVE } from "@/lib/ui/ascent";
 import { Input } from "@/components/ui/input";
 import {
   DropdownMenu,
@@ -37,7 +38,7 @@ interface ConversationListProps {
 }
 
 const STATUS_COLORS: Record<ConversationStatus, string> = {
-  open: "bg-primary",
+  open: "bg-[#7B61FF]",
   pending: "bg-amber-500",
   closed: "bg-muted-foreground",
 };
@@ -223,28 +224,28 @@ export function ConversationList({
     // w-full on mobile so the list occupies the whole viewport when it's
     // the single pane showing; fixed 320px on desktop where it shares the
     // row with the thread + contact sidebar.
-    <div className="flex h-full w-full flex-col border-r border-border bg-card lg:w-80">
+    <div className={`flex h-full w-full flex-col border-r ${ASCENT.divider} bg-[var(--ascent-panel)] lg:w-80`}>
       {/* Search + Filter */}
-      <div className="space-y-2 border-b border-border p-3">
+      <div className={`space-y-3 border-b p-4 ${ASCENT.divider}`}>
         <div className="relative">
-          <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+          <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[var(--ascent-subtle)]" />
           <Input
             value={search}
             onChange={handleSearchChange}
             placeholder={t("searchPlaceholder")}
-            className="border-border bg-muted pl-9 text-sm text-foreground placeholder-muted-foreground focus:border-primary/50"
+            className={`pl-9 text-sm ${ASCENT.field}`}
           />
         </div>
 
         <div className="flex flex-wrap items-center gap-1">
           <DropdownMenu>
-            <DropdownMenuTrigger className="inline-flex items-center justify-center h-7 gap-1 px-2 text-xs text-muted-foreground hover:text-foreground rounded-md hover:bg-muted">
+              <DropdownMenuTrigger className={`inline-flex items-center justify-center h-7 gap-1 px-2 text-xs rounded-md hover:bg-[var(--ascent-hover)] ${ASCENT_INTERACTIVE} text-[var(--ascent-subtle)] hover:text-[var(--ascent-title)]`}>
                 {activeFilter?.label ?? t("filterAll")}
                 <ChevronDown className="h-3 w-3" />
             </DropdownMenuTrigger>
             <DropdownMenuContent
               align="start"
-              className="border-border bg-popover"
+              className={ASCENT.popover}
             >
               {FILTER_OPTIONS.map((opt) => (
                 <DropdownMenuItem
@@ -254,7 +255,7 @@ export function ConversationList({
                     "text-sm",
                     filter === opt.value
                       ? "text-primary"
-                      : "text-popover-foreground"
+                      : "text-[var(--ascent-body)]"
                   )}
                 >
                   {opt.label}
@@ -267,15 +268,15 @@ export function ConversationList({
             <DropdownMenu>
               <DropdownMenuTrigger
                 className={cn(
-                  "inline-flex items-center justify-center h-7 gap-1 px-2 text-xs rounded-md hover:bg-muted",
+                  `inline-flex items-center justify-center h-7 gap-1 px-2 text-xs rounded-md hover:bg-[var(--ascent-hover)] ${ASCENT_INTERACTIVE}`,
                   selectedTagIds.length > 0
-                    ? "text-primary"
-                    : "text-muted-foreground hover:text-foreground"
+                    ? "text-[#7B61FF]"
+                    : "text-[var(--ascent-subtle)] hover:text-[var(--ascent-title)]"
                 )}
               >
                 {t("tags")}
                 {selectedTagIds.length > 0 && (
-                  <span className="flex h-4 min-w-4 items-center justify-center rounded-full bg-primary px-1 text-[10px] font-bold text-primary-foreground">
+                  <span className="flex h-4 min-w-4 items-center justify-center rounded-full bg-[#FF4F8A] px-1 text-[10px] font-bold text-white">
                     {selectedTagIds.length}
                   </span>
                 )}
@@ -283,14 +284,14 @@ export function ConversationList({
               </DropdownMenuTrigger>
               <DropdownMenuContent
                 align="start"
-                className="max-h-64 w-56 border-border bg-popover"
+                className={`max-h-64 w-56 ${ASCENT.popover}`}
               >
                 {tags.map((t) => (
                   <DropdownMenuCheckboxItem
                     key={t.id}
                     checked={selectedTagIds.includes(t.id)}
                     onCheckedChange={() => toggleTag(t.id)}
-                    className="text-sm text-popover-foreground"
+                    className="text-sm text-[var(--ascent-body)]"
                   >
                     <span className="flex items-center gap-2">
                       <span
@@ -309,10 +310,10 @@ export function ConversationList({
             <DropdownMenu>
               <DropdownMenuTrigger
                 className={cn(
-                  "inline-flex max-w-40 items-center justify-center h-7 gap-1 px-2 text-xs rounded-md hover:bg-muted",
+                  `inline-flex max-w-40 items-center justify-center h-7 gap-1 px-2 text-xs rounded-md hover:bg-[var(--ascent-hover)] ${ASCENT_INTERACTIVE}`,
                   selectedCompany
-                    ? "text-primary"
-                    : "text-muted-foreground hover:text-foreground"
+                    ? "text-[#7B61FF]"
+                    : "text-[var(--ascent-subtle)] hover:text-[var(--ascent-title)]"
                 )}
               >
                 <span className="truncate">{selectedCompany ?? t("company")}</span>
@@ -320,15 +321,15 @@ export function ConversationList({
               </DropdownMenuTrigger>
               <DropdownMenuContent
                 align="start"
-                className="max-h-64 w-56 border-border bg-popover"
+                className={`max-h-64 w-56 ${ASCENT.popover}`}
               >
                 <DropdownMenuItem
                   onClick={() => setSelectedCompany(null)}
                   className={cn(
                     "text-sm",
                     selectedCompany === null
-                      ? "text-primary"
-                      : "text-popover-foreground"
+                      ? "text-[#7B61FF]"
+                      : "text-[var(--ascent-body)]"
                   )}
                 >
                   {t("allCompanies")}
@@ -340,8 +341,8 @@ export function ConversationList({
                     className={cn(
                       "text-sm",
                       selectedCompany === co
-                        ? "text-primary"
-                        : "text-popover-foreground"
+                        ? "text-[#7B61FF]"
+                        : "text-[var(--ascent-body)]"
                     )}
                   >
                     <span className="truncate">{co}</span>
@@ -360,7 +361,7 @@ export function ConversationList({
                 <button
                   key={id}
                   onClick={() => toggleTag(id)}
-                  className="inline-flex items-center gap-1 rounded-full bg-muted px-2 py-0.5 text-[11px] text-foreground hover:bg-muted/70"
+                  className="inline-flex items-center gap-1 rounded-full bg-[var(--ascent-field)] px-2 py-0.5 text-[11px] text-[var(--ascent-body)] hover:bg-[var(--ascent-hover)]"
                 >
                   <span
                     className="h-1.5 w-1.5 shrink-0 rounded-full"
@@ -374,7 +375,7 @@ export function ConversationList({
             {selectedCompany && (
               <button
                 onClick={() => setSelectedCompany(null)}
-                className="inline-flex items-center gap-1 rounded-full bg-muted px-2 py-0.5 text-[11px] text-foreground hover:bg-muted/70"
+                className="inline-flex items-center gap-1 rounded-full bg-[var(--ascent-field)] px-2 py-0.5 text-[11px] text-[var(--ascent-body)] hover:bg-[var(--ascent-hover)]"
               >
                 <span className="max-w-24 truncate">{selectedCompany}</span>
                 <X className="h-3 w-3" />
@@ -382,7 +383,7 @@ export function ConversationList({
             )}
             <button
               onClick={clearContactFilters}
-              className="px-1 text-[11px] text-muted-foreground hover:text-foreground"
+              className="px-1 text-[11px] text-[var(--ascent-subtle)] hover:text-[var(--ascent-title)]"
             >
               {t("clearAll")}
             </button>
@@ -399,14 +400,14 @@ export function ConversationList({
       <ScrollArea className="min-h-0 flex-1">
         {loading ? (
           <div className="flex items-center justify-center py-12">
-            <div className="h-5 w-5 animate-spin rounded-full border-2 border-primary border-t-transparent" />
+            <div className="h-5 w-5 animate-spin rounded-full border-2 border-[#7B61FF] border-t-transparent" />
           </div>
         ) : filtered.length === 0 ? (
           <div className="px-4 py-12 text-center">
-            <p className="text-sm text-muted-foreground">{t("noConversations")}</p>
+            <p className="text-sm text-[var(--ascent-subtle)]">{t("noConversations")}</p>
           </div>
         ) : (
-          <div className="flex flex-col">
+          <div className="flex flex-col gap-1 p-2">
             {filtered.map((conv) => (
               <ConversationItem
                 key={conv.id}
@@ -454,12 +455,14 @@ function ConversationItem({
     <button
       onClick={handleClick}
       className={cn(
-        "flex w-full items-start gap-3 px-3 py-3 text-left transition-colors hover:bg-muted/50",
-        isActive && "border-l-2 border-primary bg-muted/70"
+        `flex w-full items-start gap-3 rounded-xl border px-3 py-3.5 text-left bg-[var(--ascent-panel)] hover:bg-[var(--ascent-hover)] ${ASCENT_INTERACTIVE}`,
+        isActive
+          ? "border-[#7B61FF] bg-[#7B61FF]/8"
+          : "border-[var(--ascent-border)]"
       )}
     >
       {/* Avatar */}
-      <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-muted text-sm font-medium text-foreground">
+      <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-[var(--ascent-field)] text-sm font-medium text-[var(--ascent-title)]">
         {contact?.avatar_url ? (
           <img
             src={contact.avatar_url}
@@ -474,18 +477,18 @@ function ConversationItem({
       {/* Content */}
       <div className="min-w-0 flex-1">
         <div className="flex items-center justify-between gap-2">
-          <span className="truncate text-sm font-medium text-foreground">
+          <span className="truncate text-sm font-medium text-[var(--ascent-title)]">
             {displayName}
           </span>
-          <span className="shrink-0 text-[10px] text-muted-foreground">{timeAgo}</span>
+          <span className="shrink-0 text-[10px] text-[var(--ascent-subtle)]">{timeAgo}</span>
         </div>
         <div className="mt-0.5 flex items-center justify-between gap-2">
-          <p className="truncate text-xs text-muted-foreground">
+          <p className="truncate text-xs text-[var(--ascent-subtle)]">
             {conversation.last_message_text || t("noMessagesYet")}
           </p>
           <div className="flex shrink-0 items-center gap-1.5">
             {conversation.unread_count > 0 && (
-              <span className="flex h-4 min-w-4 items-center justify-center rounded-full bg-primary px-1 text-[10px] font-bold text-primary-foreground">
+              <span className="flex h-4 min-w-4 items-center justify-center rounded-full bg-[#FF4F8A] px-1 text-[10px] font-bold text-white">
                 {conversation.unread_count}
               </span>
             )}

@@ -33,6 +33,7 @@ import { ConversationsChart } from '@/components/dashboard/conversations-chart'
 import { PipelineDonut } from '@/components/dashboard/pipeline-donut'
 import { ResponseTimeChart } from '@/components/dashboard/response-time-chart'
 import { ActivityFeed } from '@/components/dashboard/activity-feed'
+import { ASCENT } from '@/lib/ui/ascent'
 
 import { useTranslations } from 'next-intl'
 
@@ -122,13 +123,11 @@ export default function DashboardPage() {
   )
 
   return (
-    <div className="space-y-5">
+    <div className={`-m-4 min-h-[calc(100vh-0px)] p-6 sm:-m-6 sm:p-10 space-y-8 ${ASCENT.canvas}`}>
       {/* Header */}
-      <div>
-        <h1 className="text-2xl font-bold text-foreground">{t('title')}</h1>
-        <p className="mt-1 text-sm text-muted-foreground">
-          {t('description')}
-        </p>
+      <div className={`p-6 sm:p-7 ${ASCENT.panel}`}>
+        <h1 className={`text-3xl font-bold tracking-tight ${ASCENT.title}`}>{t('title')}</h1>
+        <p className={`mt-2 text-sm font-normal ${ASCENT.subtle}`}>{t('description')}</p>
       </div>
 
       {/* Metric cards */}

@@ -16,7 +16,9 @@ export interface WhatsAppProvider {
 
 export interface EvolutionProvider extends WhatsAppProvider {
   createOrConnect(instanceId: string, webhookUrl: string): Promise<ChannelState>
-  listContacts(instanceId: string): Promise<Array<{ phone: string; name: string | null }>>
+  listContacts(instanceId: string): Promise<
+    Array<{ phone: string; name: string | null; profilePicUrl?: string | null }>
+  >
   readState(instanceId: string): Promise<ChannelState>
   disconnect(instanceId: string): Promise<void>
   sendText(instanceId: string, to: string, text: string): Promise<{ messageId: string }>

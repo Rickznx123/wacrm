@@ -58,6 +58,7 @@ import { CustomFieldsManager } from '@/components/contacts/custom-fields-manager
 import { useCan } from '@/hooks/use-can';
 import { GatedButton } from '@/components/ui/gated-button';
 import { useTranslations } from 'next-intl';
+import { ASCENT, ASCENT_INTERACTIVE } from '@/lib/ui/ascent';
 
 const PAGE_SIZE = 25;
 
@@ -393,21 +394,27 @@ export default function ContactsPage() {
   }
 
   return (
-    <div className="space-y-6">
+    <div
+      className={`-m-4 min-h-[calc(100vh-0px)] p-6 sm:-m-6 sm:p-10 space-y-8 ${ASCENT.canvas}`}
+    >
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-        <div>
-          <h1 className="text-2xl font-bold text-foreground">{t('title')}</h1>
-          <p className="text-sm text-muted-foreground mt-1">
+      <div className={`flex flex-col gap-6 p-6 sm:p-7 ${ASCENT.panel}`}>
+        <div className="flex flex-col gap-5 sm:flex-row sm:items-start sm:justify-between">
+          <div className="space-y-2">
+          <h1 className={`text-3xl font-bold tracking-tight ${ASCENT.title}`}>
+            {t('title')}
+          </h1>
+            <p className={`text-sm font-normal ${ASCENT.subtle}`}>
             {totalCount > 0 ? t('subtitle', { count: totalCount }) : t('subtitleZero')}
           </p>
-        </div>
-        <div className="flex items-center gap-2">
+          </div>
+          {/* Ações — só "Adicionar Contato" tem destaque total; o resto discreto. */}
+          <div className="flex flex-wrap items-center gap-2.5">
           {canEditSettings && (
             <Button
-              variant="outline"
+              variant="ghost"
               onClick={() => setCustomFieldsOpen(true)}
-              className="border-border text-muted-foreground hover:bg-muted"
+              className={`h-11 px-4 ${ASCENT.ghost} ${ASCENT_INTERACTIVE}`}
             >
               <SlidersHorizontal className="size-4" />
               {t('customFieldsBtn')}
@@ -420,7 +427,7 @@ export default function ContactsPage() {
               gateReason="sync contacts from WhatsApp"
               onClick={handleSyncFromWhatsApp}
               disabled={syncing}
-              className="border-border text-muted-foreground hover:bg-muted"
+              className={`h-11 px-4 ${ASCENT.outline} ${ASCENT_INTERACTIVE}`}
             >
               {syncing ? (
                 <Loader2 className="size-4 animate-spin" />
@@ -435,7 +442,7 @@ export default function ContactsPage() {
             canAct={canEdit}
             gateReason="add or import contacts"
             onClick={() => setImportOpen(true)}
-            className="border-border text-muted-foreground hover:bg-muted"
+            className={`h-11 px-4 ${ASCENT.outline} ${ASCENT_INTERACTIVE}`}
           >
             <Upload className="size-4" />
             {t('importBtn')}
@@ -444,134 +451,137 @@ export default function ContactsPage() {
             canAct={canEdit}
             gateReason="add or import contacts"
             onClick={openAddForm}
-            className="bg-primary hover:bg-primary/90 text-primary-foreground"
+            className={`h-11 px-4 font-medium ${ASCENT.primaryGradient} ${ASCENT_INTERACTIVE}`}
           >
             <Plus className="size-4" />
             {t('addContactBtn')}
           </GatedButton>
-        </div>
-      </div>
-
-      {/* Search + tag filter */}
-      <div className="space-y-2">
-        <div className="flex flex-col sm:flex-row gap-2">
-          <div className="relative w-full max-w-sm">
-            <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 size-4 text-muted-foreground" />
-            <Input
-              value={search}
-              onChange={(e) => {
-                setSearch(e.target.value);
-                // Reset pagination when the query changes — the result
-                // set shrinks/grows, page N may no longer be valid.
-                setPage(0);
-              }}
-              placeholder={t('searchPlaceholder')}
-              className="pl-8 bg-card border-border text-foreground placeholder:text-muted-foreground"
-            />
           </div>
+        </div>
+        {/* Search + tag filter */}
+        <div className="space-y-3 pt-1">
+          <div className="flex flex-col sm:flex-row gap-2.5">
+            <div className="relative w-full max-w-sm">
+              <Search className={`absolute left-3 top-1/2 -translate-y-1/2 size-4 ${ASCENT.subtle}`} />
+              <Input
+                value={search}
+                onChange={(e) => {
+                  setSearch(e.target.value);
+                  // Reset pagination when the query changes — the result
+                  // set shrinks/grows, page N may no longer be valid.
+                  setPage(0);
+                }}
+                placeholder={t('searchPlaceholder')}
+                className={`h-11 rounded-xl pl-9 ${ASCENT.field}`}
+              />
+            </div>
 
-          <Popover>
-            <PopoverTrigger
-              render={
-                <Button
-                  variant="outline"
-                  className="border-border text-muted-foreground hover:bg-muted shrink-0"
-                />
-              }
-            >
-              <Filter className="size-4" />
-              {t('filterByTags')}
-              {selectedTagIds.length > 0 && (
-                <span className="ml-1 inline-flex items-center justify-center rounded-full bg-primary px-1.5 text-[10px] font-semibold text-primary-foreground">
-                  {selectedTagIds.length}
-                </span>
-              )}
-            </PopoverTrigger>
-            <PopoverContent align="start" className="w-64 p-0">
-              <div className="flex items-center justify-between px-3 py-2 border-b border-border">
-                <span className="text-sm font-medium text-popover-foreground">
-                  {t('filterByTags')}
-                </span>
+            <Popover>
+              <PopoverTrigger
+                render={
+                  <Button
+                    variant="outline"
+                    className={`h-11 shrink-0 ${ASCENT.outline}`}
+                  />
+                }
+              >
+                <Filter className="size-4" />
+                {t('filterByTags')}
                 {selectedTagIds.length > 0 && (
-                  <button
-                    onClick={clearTagFilters}
-                    className="text-xs text-muted-foreground hover:text-foreground"
-                  >
-                    {t('clearAll')}
-                  </button>
+                  <span className="ml-1 inline-flex items-center justify-center rounded-full bg-[#FF4F8A] px-1.5 text-[10px] font-semibold text-white">
+                    {selectedTagIds.length}
+                  </span>
                 )}
-              </div>
-              {allTags.length === 0 ? (
-                <p className="px-3 py-4 text-sm text-muted-foreground text-center">
-                  {t('noTagsYet')}
-                </p>
-              ) : (
-                <div className="max-h-64 overflow-y-auto py-1">
-                  {allTags.map((tag) => (
-                    <label
-                      key={tag.id}
-                      className="flex items-center gap-2.5 px-3 py-1.5 cursor-pointer hover:bg-muted/50"
+              </PopoverTrigger>
+              <PopoverContent align="start" className={`w-64 p-0 rounded-2xl ${ASCENT.popover}`}>
+                <div className={`flex items-center justify-between px-4 py-3 border-b ${ASCENT.divider}`}>
+                  <span className={`text-sm font-medium ${ASCENT.title}`}>
+                    {t('filterByTags')}
+                  </span>
+                  {selectedTagIds.length > 0 && (
+                    <button
+                      onClick={clearTagFilters}
+                      className={`text-xs ${ASCENT.subtle} hover:${ASCENT.title}`}
                     >
-                      <Checkbox
-                        checked={selectedTagIds.includes(tag.id)}
-                        onCheckedChange={() => toggleTagFilter(tag.id)}
-                        aria-label={`Filter by ${tag.name}`}
-                      />
-                      <span
-                        className="size-2.5 shrink-0 rounded-full"
-                        style={{ backgroundColor: tag.color }}
-                      />
-                      <span className="text-sm text-popover-foreground truncate">
-                        {tag.name}
-                      </span>
-                    </label>
-                  ))}
+                      {t('clearAll')}
+                    </button>
+                  )}
                 </div>
-              )}
-            </PopoverContent>
-          </Popover>
-        </div>
-
-        {/* Active tag-filter chips */}
-        {selectedTagIds.length > 0 && (
-          <div className="flex flex-wrap items-center gap-1.5">
-            {selectedTagIds.map((id) => {
-              const tag = tagsMap[id];
-              if (!tag) return null;
-              return (
-                <span
-                  key={id}
-                  className="inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[11px] font-medium"
-                  style={{
-                    backgroundColor: tag.color + '20',
-                    color: tag.color,
-                  }}
-                >
-                  {tag.name}
-                  <button
-                    onClick={() => toggleTagFilter(id)}
-                    aria-label={`Remove ${tag.name} filter`}
-                    className="hover:opacity-70"
-                  >
-                    <X className="size-3" />
-                  </button>
-                </span>
-              );
-            })}
-            <button
-              onClick={clearTagFilters}
-              className="text-xs text-muted-foreground hover:text-foreground px-1"
-            >
-              {t('clearAll')}
-            </button>
+                {allTags.length === 0 ? (
+                  <p className={`px-4 py-5 text-sm text-center ${ASCENT.subtle}`}>
+                    {t('noTagsYet')}
+                  </p>
+                ) : (
+                  <div className="max-h-64 overflow-y-auto py-1.5">
+                    {allTags.map((tag) => (
+                      <label
+                        key={tag.id}
+                        className="flex items-center gap-2.5 px-4 py-2 cursor-pointer hover:bg-[var(--ascent-hover)]"
+                      >
+                        <Checkbox
+                          checked={selectedTagIds.includes(tag.id)}
+                          onCheckedChange={() => toggleTagFilter(tag.id)}
+                          aria-label={`Filter by ${tag.name}`}
+                        />
+                        <span
+                          className="size-2.5 shrink-0 rounded-full"
+                          style={{ backgroundColor: tag.color }}
+                        />
+                        <span className={`text-sm truncate ${ASCENT.body}`}>
+                          {tag.name}
+                        </span>
+                      </label>
+                    ))}
+                  </div>
+                )}
+              </PopoverContent>
+            </Popover>
           </div>
-        )}
+
+          {/* Active tag-filter chips */}
+          {selectedTagIds.length > 0 && (
+            <div className="flex flex-wrap items-center gap-1.5">
+              {selectedTagIds.map((id) => {
+                const tag = tagsMap[id];
+                if (!tag) return null;
+                return (
+                  <span
+                    key={id}
+                    className="inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[11px] font-medium"
+                    style={{
+                      backgroundColor: tag.color + '20',
+                      color: tag.color,
+                    }}
+                  >
+                    {tag.name}
+                    <button
+                      onClick={() => toggleTagFilter(id)}
+                      aria-label={`Remove ${tag.name} filter`}
+                      className="hover:opacity-70"
+                    >
+                      <X className="size-3" />
+                    </button>
+                  </span>
+                );
+              })}
+              <button
+                onClick={clearTagFilters}
+                className={`text-xs ${ASCENT.subtle} hover:${ASCENT.title} px-1`}
+              >
+                {t('clearAll')}
+              </button>
+            </div>
+          )}
+        </div>
       </div>
 
       {/* Bulk action bar */}
       {selected.size > 0 && (
-        <div className="flex items-center justify-between gap-4 rounded-lg border border-border bg-muted/40 px-4 py-2">
-          <p className="text-sm text-foreground">
+        <div className={`flex items-center justify-between gap-4 px-5 py-3 ${ASCENT.card}`}>
+          <p className={`text-sm ${ASCENT.body}`}>
+            <span className="inline-flex items-center justify-center rounded-full bg-[#FF4F8A] px-2 py-0.5 mr-2 text-xs font-semibold text-white">
+              {selected.size}
+            </span>
             {t('selectedCount', { count: selected.size })}
           </p>
           <div className="flex items-center gap-2">
@@ -579,7 +589,7 @@ export default function ContactsPage() {
               variant="ghost"
               size="sm"
               onClick={() => setSelected(new Set())}
-              className="text-muted-foreground hover:text-foreground"
+              className={ASCENT.ghost}
             >
               {t('clearSelection')}
             </Button>
@@ -589,6 +599,7 @@ export default function ContactsPage() {
               canAct={canEdit}
               gateReason="delete contacts"
               onClick={() => setBulkDeleteOpen(true)}
+              className="rounded-xl"
             >
               <Trash2 className="size-4" />
               {t('deleteSelected')}
@@ -598,10 +609,10 @@ export default function ContactsPage() {
       )}
 
       {/* Table */}
-      <div className="rounded-lg border border-border overflow-hidden">
+      <div className={`${ASCENT.panel} overflow-hidden`}>
         <Table>
           <TableHeader>
-            <TableRow className="border-border hover:bg-transparent">
+            <TableRow className={`hover:bg-transparent border-b ${ASCENT.divider} bg-[var(--ascent-panel)]`}>
               <TableHead className="w-10">
                 <Checkbox
                   checked={allOnPageSelected}
@@ -611,31 +622,31 @@ export default function ContactsPage() {
                   aria-label="Select all contacts on this page"
                 />
               </TableHead>
-              <TableHead className="text-muted-foreground">{t('tableColumns.name')}</TableHead>
-              <TableHead className="text-muted-foreground">{t('tableColumns.phone')}</TableHead>
-              <TableHead className="text-muted-foreground hidden md:table-cell">{t('tableColumns.email')}</TableHead>
-              <TableHead className="text-muted-foreground hidden lg:table-cell">{t('tableColumns.company')}</TableHead>
-              <TableHead className="text-muted-foreground hidden md:table-cell">{t('tableColumns.tags')}</TableHead>
-              <TableHead className="text-muted-foreground hidden lg:table-cell">{t('tableColumns.createdAt')}</TableHead>
-              <TableHead className="text-muted-foreground w-12" />
+              <TableHead className={`${ASCENT.subtle} font-medium`}>{t('tableColumns.name')}</TableHead>
+              <TableHead className={`${ASCENT.subtle} font-medium`}>{t('tableColumns.phone')}</TableHead>
+              <TableHead className={`${ASCENT.subtle} font-medium hidden md:table-cell`}>{t('tableColumns.email')}</TableHead>
+              <TableHead className={`${ASCENT.subtle} font-medium hidden lg:table-cell`}>{t('tableColumns.company')}</TableHead>
+              <TableHead className={`${ASCENT.subtle} font-medium hidden md:table-cell`}>{t('tableColumns.tags')}</TableHead>
+              <TableHead className={`${ASCENT.subtle} font-medium hidden lg:table-cell`}>{t('tableColumns.createdAt')}</TableHead>
+              <TableHead className={`${ASCENT.subtle} w-12`} />
             </TableRow>
           </TableHeader>
           <TableBody>
             {loading ? (
-              <TableRow className="border-border">
+              <TableRow className={ASCENT.divider}>
                 <TableCell colSpan={8} className="text-center py-12">
                   <div className="flex flex-col items-center gap-2">
-                    <Loader2 className="size-6 animate-spin text-primary" />
-                    <p className="text-sm text-muted-foreground">{t('loading')}</p>
+                    <Loader2 className="size-6 animate-spin text-[#7B61FF]" />
+                    <p className={`text-sm ${ASCENT.subtle}`}>{t('loading')}</p>
                   </div>
                 </TableCell>
               </TableRow>
             ) : contacts.length === 0 ? (
-              <TableRow className="border-border">
+              <TableRow className={ASCENT.divider}>
                 <TableCell colSpan={8} className="text-center py-12">
                   <div className="flex flex-col items-center gap-2">
-                    <Users className="size-8 text-muted-foreground" />
-                    <p className="text-sm text-muted-foreground">
+                    <Users className="size-8 text-[#6C7082]" />
+                    <p className={`text-sm ${ASCENT.subtle}`}>
                       {hasActiveFilters
                         ? t('noContactsMatch')
                         : t('noContactsYet')}
@@ -647,7 +658,7 @@ export default function ContactsPage() {
                         variant="outline"
                         size="sm"
                         onClick={openAddForm}
-                        className="mt-2 border-border text-muted-foreground hover:bg-muted"
+                        className={`mt-2 ${ASCENT.outline} ${ASCENT_INTERACTIVE}`}
                       >
                         <Plus className="size-3.5" />
                         {t('addFirstContact')}
@@ -660,29 +671,29 @@ export default function ContactsPage() {
               contacts.map((contact) => (
                 <TableRow
                   key={contact.id}
-                  className="border-border hover:bg-muted/50 cursor-pointer"
+                  className={`cursor-pointer border-b last:border-b-0 ${ASCENT.divider} ${ASCENT.row}`}
                   onClick={() => openDetail(contact.id)}
                 >
-                  <TableCell onClick={(e) => e.stopPropagation()}>
+                  <TableCell className="py-4" onClick={(e) => e.stopPropagation()}>
                     <Checkbox
                       checked={selected.has(contact.id)}
                       onCheckedChange={() => toggleSelect(contact.id)}
                       aria-label={`Select ${contact.name || contact.phone}`}
                     />
                   </TableCell>
-                  <TableCell className="text-foreground font-medium">
-                    {contact.name || <span className="text-muted-foreground italic">{t('unnamed')}</span>}
+                  <TableCell className={`py-4 font-medium ${ASCENT.title}`}>
+                    {contact.name || <span className={`${ASCENT.subtle} italic`}>{t('unnamed')}</span>}
                   </TableCell>
-                  <TableCell className="text-muted-foreground font-mono text-xs">
+                  <TableCell className="py-4 text-[var(--ascent-body)] font-mono text-xs">
                     {contact.phone}
                   </TableCell>
-                  <TableCell className="text-muted-foreground hidden md:table-cell text-sm">
-                    {contact.email || <span className="text-muted-foreground">-</span>}
+                  <TableCell className={`py-4 hidden md:table-cell text-sm ${ASCENT.body}`}>
+                    {contact.email || <span className={ASCENT.subtle}>-</span>}
                   </TableCell>
-                  <TableCell className="text-muted-foreground hidden lg:table-cell text-sm">
-                    {contact.company || <span className="text-muted-foreground">-</span>}
+                  <TableCell className={`py-4 hidden lg:table-cell text-sm ${ASCENT.body}`}>
+                    {contact.company || <span className={ASCENT.subtle}>-</span>}
                   </TableCell>
-                  <TableCell className="hidden md:table-cell">
+                  <TableCell className="py-4 hidden md:table-cell">
                     <div className="flex flex-wrap gap-1">
                       {contact.tags && contact.tags.length > 0 ? (
                         contact.tags.slice(0, 3).map((tag) => (
@@ -698,30 +709,30 @@ export default function ContactsPage() {
                           </span>
                         ))
                       ) : (
-                        <span className="text-muted-foreground text-xs">-</span>
+                        <span className={`${ASCENT.subtle} text-xs`}>-</span>
                       )}
                       {contact.tags && contact.tags.length > 3 && (
-                        <span className="text-[10px] text-muted-foreground">
+                        <span className={`text-[10px] ${ASCENT.subtle}`}>
                           +{contact.tags.length - 3}
                         </span>
                       )}
                     </div>
                   </TableCell>
-                  <TableCell className="text-muted-foreground text-xs hidden lg:table-cell">
+                  <TableCell className={`py-4 text-xs hidden lg:table-cell ${ASCENT.subtle}`}>
                     {new Date(contact.created_at).toLocaleDateString('pt-BR', {
                       month: 'short',
                       day: 'numeric',
                       year: 'numeric',
                     })}
                   </TableCell>
-                  <TableCell>
+                  <TableCell className="py-4">
                     <DropdownMenu>
                       <DropdownMenuTrigger
                         render={
                           <Button
                             variant="ghost"
                             size="icon-sm"
-                            className="text-muted-foreground hover:text-foreground"
+                            className={`text-[var(--ascent-subtle)] hover:text-[var(--ascent-title)] hover:bg-[var(--ascent-hover)]`}
                             onClick={(e) => e.stopPropagation()}
                           />
                         }
@@ -730,19 +741,19 @@ export default function ContactsPage() {
                       </DropdownMenuTrigger>
                       <DropdownMenuContent
                         align="end"
-                        className="bg-popover border-border"
+                        className={ASCENT.popover}
                       >
                         <DropdownMenuItem
                           onClick={(e) => {
                             e.stopPropagation();
                             openEditForm(contact);
                           }}
-                          className="text-popover-foreground focus:bg-muted focus:text-foreground"
+                          className="text-[var(--ascent-body)] focus:bg-[var(--ascent-hover)] focus:text-[var(--ascent-title)]"
                         >
                           <Pencil className="size-4" />
                           {t('editAction')}
                         </DropdownMenuItem>
-                        <DropdownMenuSeparator className="bg-border" />
+                        <DropdownMenuSeparator className={ASCENT.divider} />
                         <DropdownMenuItem
                           variant="destructive"
                           onClick={(e) => {
@@ -766,7 +777,7 @@ export default function ContactsPage() {
       {/* Pagination */}
       {totalPages > 1 && (
         <div className="flex items-center justify-between">
-          <p className="text-xs text-muted-foreground">
+          <p className={`text-xs ${ASCENT.subtle}`}>
             {t('showingPagination', {
               start: page * PAGE_SIZE + 1,
               end: Math.min((page + 1) * PAGE_SIZE, totalCount),
@@ -779,11 +790,11 @@ export default function ContactsPage() {
               size="icon-sm"
               disabled={!hasPrev}
               onClick={() => setPage((p) => p - 1)}
-              className="border-border text-muted-foreground hover:bg-muted hover:text-foreground disabled:opacity-30"
+              className={`${ASCENT.outline} ${ASCENT_INTERACTIVE} disabled:opacity-30`}
             >
               <ChevronLeft className="size-4" />
             </Button>
-            <span className="text-xs text-muted-foreground px-2">
+            <span className={`text-xs px-2 ${ASCENT.subtle}`}>
               {t('pageCount', { page: page + 1, total: totalPages })}
             </span>
             <Button
@@ -791,7 +802,7 @@ export default function ContactsPage() {
               size="icon-sm"
               disabled={!hasNext}
               onClick={() => setPage((p) => p + 1)}
-              className="border-border text-muted-foreground hover:bg-muted hover:text-foreground disabled:opacity-30"
+              className={`${ASCENT.outline} ${ASCENT_INTERACTIVE} disabled:opacity-30`}
             >
               <ChevronRight className="size-4" />
             </Button>
@@ -840,18 +851,18 @@ export default function ContactsPage() {
 
       {/* Delete Confirmation */}
       <Dialog open={deleteConfirmOpen} onOpenChange={setDeleteConfirmOpen}>
-        <DialogContent className="bg-popover border-border text-popover-foreground sm:max-w-sm">
+        <DialogContent className={`sm:max-w-sm ${ASCENT.popover}`}>
           <DialogHeader>
-            <DialogTitle className="text-popover-foreground">{t('deleteContactTitle')}</DialogTitle>
-            <DialogDescription className="text-muted-foreground">
+            <DialogTitle className={ASCENT.title}>{t('deleteContactTitle')}</DialogTitle>
+            <DialogDescription className={ASCENT.subtle}>
               {t('deleteContactDesc', { name: deleteTarget?.name || deleteTarget?.phone || '' })}
             </DialogDescription>
           </DialogHeader>
-          <DialogFooter className="bg-popover border-border">
+          <DialogFooter>
             <Button
               variant="outline"
               onClick={() => setDeleteConfirmOpen(false)}
-              className="border-border text-muted-foreground hover:bg-muted"
+              className={`${ASCENT.outline} ${ASCENT_INTERACTIVE}`}
             >
               {t('cancel')}
             </Button>
@@ -869,20 +880,20 @@ export default function ContactsPage() {
 
       {/* Bulk Delete Confirmation */}
       <Dialog open={bulkDeleteOpen} onOpenChange={setBulkDeleteOpen}>
-        <DialogContent className="bg-popover border-border text-popover-foreground sm:max-w-sm">
+        <DialogContent className={`sm:max-w-sm ${ASCENT.popover}`}>
           <DialogHeader>
-            <DialogTitle className="text-popover-foreground">
+            <DialogTitle className={ASCENT.title}>
               {t('deleteBulkTitle')}
             </DialogTitle>
-            <DialogDescription className="text-muted-foreground">
+            <DialogDescription className={ASCENT.subtle}>
               {t('deleteBulkDesc', { count: selected.size })}
             </DialogDescription>
           </DialogHeader>
-          <DialogFooter className="bg-popover border-border">
+          <DialogFooter>
             <Button
               variant="outline"
               onClick={() => setBulkDeleteOpen(false)}
-              className="border-border text-muted-foreground hover:bg-muted"
+              className={`${ASCENT.outline} ${ASCENT_INTERACTIVE}`}
             >
               {t('cancel')}
             </Button>

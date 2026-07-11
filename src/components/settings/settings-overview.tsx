@@ -12,6 +12,7 @@ import { CURRENCIES } from '@/lib/currency';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Card } from '@/components/ui/card';
 import { cn } from '@/lib/utils';
+import { ASCENT, ASCENT_INTERACTIVE } from '@/lib/ui/ascent';
 
 import { SECTION_META, type SettingsSection } from './settings-sections';
 import { SettingsChip, StatusDot } from './settings-chip';
@@ -222,21 +223,21 @@ export function SettingsOverview({
   return (
     <section className="animate-in fade-in-50 duration-200">
       {/* Identity */}
-      <Card className="flex-row items-center gap-4 px-5 py-5">
+      <Card className={`flex-row items-center gap-4 px-5 py-5 ${ASCENT.divider} bg-[var(--ascent-card)]`}>
         <Avatar size="lg" className="size-14">
           {profile?.avatar_url ? (
             <AvatarImage src={profile.avatar_url} alt={displayName} />
           ) : null}
-          <AvatarFallback className="bg-primary/10 text-xl text-primary">
+          <AvatarFallback className="bg-[#7B61FF]/10 text-xl text-[#7B61FF]">
             {initial}
           </AvatarFallback>
         </Avatar>
         <div className="min-w-0 flex-1">
-          <div className="truncate text-base font-semibold text-foreground">
+          <div className={`truncate text-base font-semibold ${ASCENT.title}`}>
             {displayName}
           </div>
           {profile?.email ? (
-            <div className="truncate text-sm text-muted-foreground">
+            <div className={`truncate text-sm ${ASCENT.subtle}`}>
               {profile.email}
             </div>
           ) : null}
@@ -260,18 +261,17 @@ export function SettingsOverview({
               type="button"
               onClick={() => onSelect(section)}
               className={cn(
-                'group flex items-start gap-3.5 rounded-xl border border-border bg-card p-4 text-left transition-colors',
-                'hover:border-primary-soft-2 hover:bg-card-2',
+                `group flex items-start gap-3.5 rounded-xl border bg-[var(--ascent-card)] p-4 text-left hover:bg-[var(--ascent-hover)] ${ASCENT.divider} ${ASCENT_INTERACTIVE}`,
               )}
             >
-              <span className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-primary-soft text-primary">
+              <span className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-[#7B61FF]/10 text-[#7B61FF]">
                 <Icon className="size-4" />
               </span>
               <span className="min-w-0 flex-1">
-                <span className="block text-sm font-semibold text-foreground">
+                <span className={`block text-sm font-semibold ${ASCENT.title}`}>
                   {tSections(section)}
                 </span>
-                <span className="mt-0.5 flex items-center gap-1.5 text-xs text-muted-foreground">
+                <span className={`mt-0.5 flex items-center gap-1.5 text-xs ${ASCENT.subtle}`}>
                   {loading ? (
                     <>
                       <Loader2 className="size-3 animate-spin" /> {t('loading')}
@@ -281,7 +281,7 @@ export function SettingsOverview({
                   )}
                 </span>
               </span>
-              <ChevronRight className="size-4 shrink-0 text-muted-foreground transition-transform group-hover:translate-x-0.5" />
+              <ChevronRight className={`size-4 shrink-0 ${ASCENT.subtle} transition-transform group-hover:translate-x-0.5`} />
             </button>
           );
         })}

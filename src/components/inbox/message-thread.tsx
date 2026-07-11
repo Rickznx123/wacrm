@@ -51,6 +51,7 @@ import { TemplatePicker } from "./template-picker";
 import { AiThreadBanner } from "./ai-thread-banner";
 import { buildReplyPreview } from "./reply-quote";
 import { toast } from "sonner";
+import { ASCENT, ASCENT_INTERACTIVE } from "@/lib/ui/ascent";
 
 interface ReplyDraft {
   id: string;
@@ -141,17 +142,7 @@ const STATUS_OPTIONS: { label: string; value: ConversationStatus; color: string 
   { label: "Closed", value: "closed", color: "text-muted-foreground" },
 ];
 
-/**
- * WhatsApp-style doodle background applied to the chat area (both the
- * active thread and the empty state). The SVG tile lives at
- * `/public/inbox-doodle.svg`; the slate-950 colour sits underneath so
- * the doodles read as a subtle pattern rather than a stark grid.
- *
- * Defined once at module scope so the two render paths can't drift —
- * if we ever switch the asset, both spots update together.
- */
-const DOODLE_BG_CLASSES =
-  "bg-background bg-[url('/inbox-doodle.svg')] bg-repeat";
+const THREAD_SURFACE = "bg-[var(--ascent-panel)]";
 
 export function MessageThread({
   conversation,
@@ -838,21 +829,21 @@ export function MessageThread({
     [conversation, onAssignChange],
   );
 
-  // Empty state — same WhatsApp-style doodle background as the active
-  // thread below, so swapping between empty/selected doesn't change the
-  // pattern under the user's eye.
+  // Empty state with a clean, purpose-built surface.
   if (!conversation || !contact) {
     return (
-      <div className={cn("flex flex-1 flex-col items-center justify-center", DOODLE_BG_CLASSES)}>
-        <div className="flex h-16 w-16 items-center justify-center rounded-full bg-muted">
-          <MessageSquare className="h-8 w-8 text-muted-foreground" />
+      <div className="flex h-full w-full flex-1 flex-col items-center justify-center bg-[var(--ascent-canvas)] px-6">
+        <div className={`flex w-full max-w-md flex-col items-center rounded-2xl border bg-[var(--ascent-panel)] p-10 text-center ${ASCENT.divider}`}>
+          <div className="flex h-16 w-16 items-center justify-center rounded-full bg-[#7B61FF]/10">
+            <MessageSquare className="h-8 w-8 text-[#7B61FF]" />
+          </div>
+          <h3 className={`mt-5 text-base font-bold ${ASCENT.title}`}>
+            {t("selectConversation")}
+          </h3>
+          <p className={`mt-2 text-sm ${ASCENT.subtle}`}>
+            {t("selectConversationHint")}
+          </p>
         </div>
-        <h3 className="mt-4 text-sm font-medium text-muted-foreground">
-          {t("selectConversation")}
-        </h3>
-        <p className="mt-1 text-xs text-muted-foreground">
-          {t("selectConversationHint")}
-        </p>
       </div>
     );
   }
@@ -877,10 +868,8 @@ export function MessageThread({
     // clipped and the hover toolbar overlaps the Tags panel. Letting the
     // root shrink lets the bubbles' break-words / max-w caps apply.
     // Issue #257.
-    <div className={cn("flex min-w-0 flex-1 flex-col", DOODLE_BG_CLASSES)}>
-      {/* Header — solid card surface sits on top of the doodle so the
-          name/avatar/dropdowns stay legible. */}
-      <div className="flex items-center justify-between gap-2 border-b border-border bg-card px-3 py-3 sm:px-4">
+    <div className={cn("flex min-w-0 flex-1 flex-col", THREAD_SURFACE)}>
+      <div className={`flex items-center justify-between gap-2 border-b px-3 py-3 sm:px-4 ${ASCENT.divider}`}>
         <div className="flex min-w-0 items-center gap-2 sm:gap-3">
           {/* Back-to-list button — mobile only. Hidden on lg+ where the
               conversation list is always visible next to the thread. */}
@@ -889,17 +878,17 @@ export function MessageThread({
               type="button"
               onClick={onBack}
               aria-label={t("backToConversations")}
-              className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-md text-muted-foreground hover:bg-muted hover:text-foreground lg:hidden"
+              className={`flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-md text-[var(--ascent-subtle)] hover:bg-[var(--ascent-hover)] hover:text-[var(--ascent-title)] lg:hidden ${ASCENT_INTERACTIVE}`}
             >
               <ArrowLeft className="h-5 w-5" />
             </button>
           )}
-          <div className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full bg-muted text-sm font-medium text-foreground">
+          <div className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full bg-[var(--ascent-field)] text-sm font-medium text-[var(--ascent-title)]">
             {displayName.charAt(0).toUpperCase()}
           </div>
           <div className="min-w-0">
-            <h2 className="truncate text-sm font-semibold text-foreground">{displayName}</h2>
-            <p className="truncate text-xs text-muted-foreground">{contact.phone}</p>
+            <h2 className="truncate text-sm font-semibold text-[var(--ascent-title)]">{displayName}</h2>
+            <p className="truncate text-xs text-[var(--ascent-subtle)]">{contact.phone}</p>
           </div>
           {/* Session timer badge — hidden on the narrowest phones so
               the name + back arrow keep their room. */}
@@ -931,7 +920,7 @@ export function MessageThread({
               title={contactPanelOpen ? t("hideContact") : t("showContact")}
               aria-pressed={contactPanelOpen}
               className={cn(
-                "hidden h-7 w-7 items-center justify-center rounded-md transition-colors hover:bg-muted hover:text-foreground lg:inline-flex",
+                `hidden h-7 w-7 items-center justify-center rounded-md hover:bg-[var(--ascent-hover)] hover:text-[var(--ascent-title)] lg:inline-flex ${ASCENT_INTERACTIVE}`,
                 contactPanelOpen ? "text-primary" : "text-muted-foreground",
               )}
             >
@@ -956,7 +945,7 @@ export function MessageThread({
               aria-label={t("refreshConversation")}
               title={t("refresh")}
               className={cn(
-                "inline-flex h-7 w-7 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-muted hover:text-foreground disabled:opacity-60",
+                `inline-flex h-7 w-7 items-center justify-center rounded-md text-[var(--ascent-subtle)] hover:bg-[var(--ascent-hover)] hover:text-[var(--ascent-title)] disabled:opacity-60 ${ASCENT_INTERACTIVE}`,
               )}
             >
               <RefreshCw
@@ -1058,7 +1047,7 @@ export function MessageThread({
       </div>
 
       {/* Messages Area */}
-      <div ref={scrollRef} className="flex-1 overflow-y-auto px-4 py-4">
+      <div ref={scrollRef} className="flex-1 overflow-y-auto bg-[var(--ascent-canvas)] px-4 py-4">
         {loading ? (
           <div className="flex items-center justify-center py-12">
             <div className="h-5 w-5 animate-spin rounded-full border-2 border-primary border-t-transparent" />

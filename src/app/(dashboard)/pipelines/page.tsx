@@ -30,6 +30,7 @@ import { useCan } from "@/hooks/use-can";
 import { useAuth } from "@/hooks/use-auth";
 import { GatedButton } from "@/components/ui/gated-button";
 import { useTranslations } from "next-intl";
+import { ASCENT, ASCENT_INTERACTIVE } from "@/lib/ui/ascent";
 
 // Pipeline creation is admin-class (settings-tier write under
 // the new RLS); deal creation is operational and only requires
@@ -299,14 +300,14 @@ export default function PipelinesPage() {
 
   if (loading) {
     return (
-      <div className="space-y-6">
-        <div className="flex items-center justify-between">
-          <div className="h-8 w-48 animate-pulse rounded bg-muted" />
-          <div className="h-9 w-28 animate-pulse rounded-lg bg-muted" />
+      <div className={`-m-4 min-h-[calc(100vh-0px)] p-6 sm:-m-6 sm:p-10 space-y-8 ${ASCENT.canvas}`}>
+        <div className={`flex items-center justify-between p-6 sm:p-7 ${ASCENT.panel}`}>
+          <div className="h-8 w-48 animate-pulse rounded bg-[var(--ascent-field)]" />
+          <div className="h-9 w-28 animate-pulse rounded-lg bg-[var(--ascent-field)]" />
         </div>
         <div className="flex gap-3">
           {[1, 2, 3, 4, 5].map((i) => (
-            <div key={i} className="h-96 w-72 animate-pulse rounded-xl bg-muted/50" />
+            <div key={i} className="h-96 w-72 animate-pulse rounded-xl bg-[var(--ascent-card)]" />
           ))}
         </div>
       </div>
@@ -314,27 +315,27 @@ export default function PipelinesPage() {
   }
 
   return (
-    <div className="space-y-6">
+    <div className={`-m-4 min-h-[calc(100vh-0px)] p-6 sm:-m-6 sm:p-10 space-y-8 ${ASCENT.canvas}`}>
       {/* Header */}
-      <div className="flex flex-wrap items-center justify-between gap-3">
+      <div className={`flex flex-wrap items-center justify-between gap-3 p-6 sm:p-7 ${ASCENT.panel}`}>
         <div className="flex items-center gap-3">
           {/* Pipeline selector dropdown */}
           <DropdownMenu>
             <DropdownMenuTrigger
-              className="inline-flex items-center gap-2 rounded-lg border border-border bg-card px-3 py-2 text-sm text-foreground hover:bg-muted transition-colors data-[popup-open]:bg-muted"
+              className={`inline-flex items-center gap-2 rounded-lg border px-3 py-2 text-sm ${ASCENT.divider} bg-[var(--ascent-panel)] ${ASCENT.title} hover:bg-[var(--ascent-hover)] data-[popup-open]:bg-[var(--ascent-hover)] ${ASCENT_INTERACTIVE}`}
             >
-              <GitBranch className="h-4 w-4 text-primary" />
+              <GitBranch className="h-4 w-4 text-[#7B61FF]" />
               <span className="font-semibold">
                 {selectedPipeline?.name ?? t("selectPipeline")}
               </span>
-              <ChevronDown className="h-4 w-4 text-muted-foreground" />
+              <ChevronDown className={`h-4 w-4 ${ASCENT.subtle}`} />
             </DropdownMenuTrigger>
             <DropdownMenuContent
               align="start"
-              className="w-64 border-border bg-popover text-popover-foreground"
+              className={`w-64 ${ASCENT.popover}`}
             >
               {pipelines.length === 0 && (
-                <DropdownMenuItem disabled className="text-muted-foreground">
+                <DropdownMenuItem disabled className={ASCENT.subtle}>
                   {t("noPipelinesYet")}
                 </DropdownMenuItem>
               )}
@@ -344,19 +345,19 @@ export default function PipelinesPage() {
                   onClick={() => setSelectedPipelineId(p.id)}
                   className={
                     p.id === selectedPipelineId
-                      ? "text-primary"
-                      : "text-popover-foreground"
+                      ? "text-[#7B61FF]"
+                      : "text-[var(--ascent-body)]"
                   }
                 >
                   <GitBranch className="mr-2 h-3.5 w-3.5" />
                   {p.name}
                 </DropdownMenuItem>
               ))}
-              <DropdownMenuSeparator className="bg-border" />
+              <DropdownMenuSeparator className={ASCENT.divider} />
               {selectedPipeline && (
                 <DropdownMenuItem
                   onClick={() => setSettingsOpen(true)}
-                  className="text-popover-foreground"
+                  className="text-[var(--ascent-body)]"
                 >
                   <Settings className="mr-2 h-3.5 w-3.5" />
                   {t("managePipelines")}
@@ -372,7 +373,7 @@ export default function PipelinesPage() {
             canAct={canEditSettings}
             gateReason="create pipelines"
             onClick={() => setNewPipelineOpen(true)}
-            className="border-border bg-card text-foreground hover:bg-muted"
+            className={`${ASCENT.outline} ${ASCENT_INTERACTIVE}`}
           >
             <Plus className="mr-1 h-4 w-4" />
             {t("addPipeline")}
@@ -382,7 +383,7 @@ export default function PipelinesPage() {
             gateReason="create deals"
             disabled={!selectedPipelineId || stages.length === 0}
             onClick={() => handleAddDeal()}
-            className="bg-primary text-primary-foreground hover:bg-primary/90"
+            className={`${ASCENT.primary} ${ASCENT_INTERACTIVE}`}
           >
             <Plus className="mr-1 h-4 w-4" />
             {t("addDeal")}
@@ -392,19 +393,19 @@ export default function PipelinesPage() {
 
       {/* Board */}
       {pipelines.length === 0 ? (
-        <div className="flex flex-col items-center justify-center rounded-xl border border-dashed border-border py-20">
-          <GitBranch className="h-12 w-12 text-muted-foreground" />
-          <h3 className="mt-4 text-lg font-medium text-foreground">
+        <div className={`flex flex-col items-center justify-center rounded-xl border border-dashed ${ASCENT.divider} bg-[var(--ascent-panel)] py-20 ${ASCENT.panel}`}>
+          <GitBranch className={`h-12 w-12 ${ASCENT.subtle}`} />
+          <h3 className={`mt-4 text-lg font-medium ${ASCENT.title}`}>
             {t("noPipelinesYet")}
           </h3>
-          <p className="mt-2 text-sm text-muted-foreground">
+          <p className={`mt-2 text-sm ${ASCENT.subtle}`}>
             {t("createToStartTracking")}
           </p>
           <GatedButton
             canAct={canEditSettings}
             gateReason="create pipelines"
             onClick={() => setNewPipelineOpen(true)}
-            className="mt-4 bg-primary text-primary-foreground hover:bg-primary/90"
+            className={`mt-4 ${ASCENT.primary} ${ASCENT_INTERACTIVE}`}
           >
             <Plus className="mr-1 h-4 w-4" />
             {t("createPipeline")}
@@ -425,37 +426,37 @@ export default function PipelinesPage() {
 
       {/* New Pipeline Dialog */}
       <Dialog open={newPipelineOpen} onOpenChange={setNewPipelineOpen}>
-        <DialogContent className="sm:max-w-sm bg-popover border-border">
+        <DialogContent className={`sm:max-w-sm ${ASCENT.popover}`}>
           <DialogHeader>
-            <DialogTitle className="text-popover-foreground">{t("newPipeline")}</DialogTitle>
+            <DialogTitle className={ASCENT.title}>{t("newPipeline")}</DialogTitle>
           </DialogHeader>
           <div className="py-2">
-            <Label className="text-muted-foreground">{t("pipelineName")}</Label>
+            <Label className={ASCENT.subtle}>{t("pipelineName")}</Label>
             <Input
               value={newPipelineName}
               onChange={(e) => setNewPipelineName(e.target.value)}
               placeholder={t("pipelineNamePlaceholder")}
-              className="mt-2 bg-muted border-border text-foreground"
+              className={`mt-2 ${ASCENT.field}`}
               onKeyDown={(e) => {
                 if (e.key === "Enter") handleCreatePipeline();
               }}
             />
-            <p className="mt-2 text-xs text-muted-foreground">
+            <p className={`mt-2 text-xs ${ASCENT.subtle}`}>
               {t("defaultStagesDesc")}
             </p>
           </div>
-          <DialogFooter className="bg-popover/50 border-border">
+          <DialogFooter>
             <Button
               variant="outline"
               onClick={() => setNewPipelineOpen(false)}
-              className="border-border text-muted-foreground hover:bg-muted"
+              className={`${ASCENT.outline} ${ASCENT_INTERACTIVE}`}
             >
               {t("cancel")}
             </Button>
             <Button
               onClick={handleCreatePipeline}
               disabled={creating || !newPipelineName.trim()}
-              className="bg-primary text-primary-foreground hover:bg-primary/90"
+              className={`${ASCENT.primary} ${ASCENT_INTERACTIVE}`}
             >
               {creating ? t("creating") : t("createPipelineBtn")}
             </Button>
