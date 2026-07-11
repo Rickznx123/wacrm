@@ -40,6 +40,7 @@ import {
   LayoutTemplate,
 } from 'lucide-react';
 import { useTranslations } from 'next-intl';
+import { ASCENT, ASCENT_INTERACTIVE } from '@/lib/ui/ascent';
 
 interface ContactDetailViewProps {
   open: boolean;
@@ -387,7 +388,7 @@ export function ContactDetailView({
     <Sheet open={open} onOpenChange={onOpenChange}>
       <SheetContent
         side="right"
-        className="bg-popover border-border text-popover-foreground sm:max-w-lg w-full p-0"
+        className="w-full border-l border-white/12 bg-[linear-gradient(170deg,rgba(15,17,27,0.98),rgba(31,22,56,0.94)_58%,rgba(13,14,22,0.98))] p-0 text-popover-foreground shadow-[-24px_0_44px_rgba(6,8,18,0.48)] backdrop-blur-xl sm:max-w-lg"
       >
         {loading || !contact ? (
           <div className="flex items-center justify-center h-full">
@@ -396,10 +397,10 @@ export function ContactDetailView({
         ) : (
           <div className="flex flex-col h-full">
             {/* Header */}
-            <SheetHeader className="p-4 border-b border-border/50">
+            <SheetHeader className="border-b border-white/10 bg-[linear-gradient(180deg,rgba(123,97,255,0.14),rgba(255,255,255,0.02)_60%,transparent)] p-4">
               <div className="flex items-center gap-3">
-                <Avatar className="size-12 bg-muted border border-border">
-                  <AvatarFallback className="bg-primary/10 text-primary text-sm font-medium">
+                <Avatar className="size-12 border border-white/12 bg-white/[0.03] shadow-[0_10px_20px_rgba(8,10,22,0.34)]">
+                  <AvatarFallback className="bg-[linear-gradient(150deg,rgba(123,97,255,0.2),rgba(255,255,255,0.05))] text-primary text-sm font-medium">
                     {getInitials(contact.name)}
                   </AvatarFallback>
                 </Avatar>
@@ -443,7 +444,7 @@ export function ContactDetailView({
                   size="sm"
                   onClick={() => setTemplatePickerOpen(true)}
                   disabled={sendingTemplate}
-                  className="bg-primary text-primary-foreground hover:bg-primary/90"
+                  className={`border border-white/10 bg-[linear-gradient(135deg,#7B61FF,#6B4FE6)] text-primary-foreground shadow-[0_10px_24px_rgba(66,46,165,0.45)] hover:brightness-105 ${ASCENT_INTERACTIVE}`}
                 >
                   {sendingTemplate ? (
                     <Loader2 className="size-4 animate-spin" />
@@ -457,34 +458,34 @@ export function ContactDetailView({
 
             {/* Tabs */}
             <Tabs defaultValue="details" className="flex-1 flex flex-col min-h-0">
-              <TabsList className="bg-muted/50 border-b border-border mx-4 mt-3">
+              <TabsList className="mx-4 mt-3 border border-white/12 bg-white/[0.03]">
                 <TabsTrigger
                   value="details"
-                  className="data-active:bg-muted data-active:text-primary text-muted-foreground"
+                  className="text-muted-foreground data-active:bg-[#7B61FF]/15 data-active:text-primary"
                 >
                   {t('tabs.details')}
                 </TabsTrigger>
                 <TabsTrigger
                   value="tags"
-                  className="data-active:bg-muted data-active:text-primary text-muted-foreground"
+                  className="text-muted-foreground data-active:bg-[#7B61FF]/15 data-active:text-primary"
                 >
                   {t('tabs.tags', { fallback: 'Tags' })}
                 </TabsTrigger>
                 <TabsTrigger
                   value="notes"
-                  className="data-active:bg-muted data-active:text-primary text-muted-foreground"
+                  className="text-muted-foreground data-active:bg-[#7B61FF]/15 data-active:text-primary"
                 >
                   {t('tabs.notes')}
                 </TabsTrigger>
                 <TabsTrigger
                   value="custom"
-                  className="data-active:bg-muted data-active:text-primary text-muted-foreground"
+                  className="text-muted-foreground data-active:bg-[#7B61FF]/15 data-active:text-primary"
                 >
                   {t('tabs.custom')}
                 </TabsTrigger>
                 <TabsTrigger
                   value="deals"
-                  className="data-active:bg-muted data-active:text-primary text-muted-foreground"
+                  className="text-muted-foreground data-active:bg-[#7B61FF]/15 data-active:text-primary"
                 >
                   {t('tabs.deals')}
                 </TabsTrigger>
@@ -498,7 +499,7 @@ export function ContactDetailView({
                     <Input
                       value={editName}
                       onChange={(e) => setEditName(e.target.value)}
-                      className="bg-muted border-border text-foreground h-8 text-sm"
+                      className={`h-8 border-white/12 bg-white/[0.03] text-foreground text-sm ${ASCENT.field}`}
                     />
                   </div>
                   <div className="space-y-1.5">
@@ -508,7 +509,7 @@ export function ContactDetailView({
                     <Input
                       value={editPhone}
                       onChange={(e) => setEditPhone(e.target.value)}
-                      className="bg-muted border-border text-foreground h-8 text-sm"
+                      className={`h-8 border-white/12 bg-white/[0.03] text-foreground text-sm ${ASCENT.field}`}
                     />
                   </div>
                   <div className="space-y-1.5">
@@ -516,7 +517,7 @@ export function ContactDetailView({
                     <Input
                       value={editEmail}
                       onChange={(e) => setEditEmail(e.target.value)}
-                      className="bg-muted border-border text-foreground h-8 text-sm"
+                      className={`h-8 border-white/12 bg-white/[0.03] text-foreground text-sm ${ASCENT.field}`}
                     />
                   </div>
                   <div className="space-y-1.5">
@@ -524,13 +525,13 @@ export function ContactDetailView({
                     <Input
                       value={editCompany}
                       onChange={(e) => setEditCompany(e.target.value)}
-                      className="bg-muted border-border text-foreground h-8 text-sm"
+                      className={`h-8 border-white/12 bg-white/[0.03] text-foreground text-sm ${ASCENT.field}`}
                     />
                   </div>
                   <Button
                     onClick={saveDetails}
                     disabled={savingDetails}
-                    className="bg-primary hover:bg-primary/90 text-primary-foreground w-full"
+                    className={`w-full border border-white/10 bg-[linear-gradient(135deg,#7B61FF,#6B4FE6)] text-primary-foreground shadow-[0_10px_24px_rgba(66,46,165,0.45)] hover:brightness-105 ${ASCENT_INTERACTIVE}`}
                     size="sm"
                   >
                     {savingDetails ? (
@@ -589,12 +590,12 @@ export function ContactDetailView({
                     value={newNote}
                     onChange={(e) => setNewNote(e.target.value)}
                     placeholder={t('notesTab.placeholder')}
-                    className="bg-muted border-border text-foreground placeholder:text-muted-foreground min-h-[60px] text-sm resize-none"
+                    className={`min-h-[60px] resize-none border-white/12 bg-white/[0.03] text-foreground text-sm placeholder:text-muted-foreground ${ASCENT.field}`}
                   />
                   <Button
                     onClick={addNote}
                     disabled={!newNote.trim() || savingNote}
-                    className="bg-primary hover:bg-primary/90 text-primary-foreground"
+                    className={`border border-white/10 bg-[linear-gradient(135deg,#7B61FF,#6B4FE6)] text-primary-foreground shadow-[0_10px_24px_rgba(66,46,165,0.45)] hover:brightness-105 ${ASCENT_INTERACTIVE}`}
                     size="sm"
                   >
                     {savingNote ? (
@@ -619,7 +620,7 @@ export function ContactDetailView({
                     notes.map((note) => (
                       <div
                         key={note.id}
-                        className="rounded-lg bg-muted/50 border border-border/50 p-3 group"
+                        className="group rounded-lg border border-white/10 bg-white/[0.03] p-3"
                       >
                         <div className="flex items-start justify-between gap-2">
                           <p className="text-sm text-muted-foreground whitespace-pre-wrap flex-1">
@@ -673,14 +674,14 @@ export function ContactDetailView({
                             }))
                           }
                           placeholder={t('enterCustomField', { name: field.field_name })}
-                          className="bg-muted border-border text-foreground h-8 text-sm placeholder:text-muted-foreground"
+                          className={`h-8 border-white/12 bg-white/[0.03] text-foreground text-sm placeholder:text-muted-foreground ${ASCENT.field}`}
                         />
                       </div>
                     ))}
                     <Button
                       onClick={saveCustomFields}
                       disabled={savingCustom}
-                      className="bg-primary hover:bg-primary/90 text-primary-foreground w-full"
+                      className={`w-full border border-white/10 bg-[linear-gradient(135deg,#7B61FF,#6B4FE6)] text-primary-foreground shadow-[0_10px_24px_rgba(66,46,165,0.45)] hover:brightness-105 ${ASCENT_INTERACTIVE}`}
                       size="sm"
                     >
                       {savingCustom ? (
@@ -707,7 +708,7 @@ export function ContactDetailView({
                     {deals.map((deal) => (
                       <div
                         key={deal.id}
-                        className="rounded-lg border border-border bg-muted/50 p-3"
+                        className="rounded-lg border border-white/10 bg-white/[0.03] p-3"
                       >
                         <div className="flex items-start justify-between gap-2">
                           <p className="text-sm font-medium text-foreground">

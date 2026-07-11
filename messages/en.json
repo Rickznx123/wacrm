@@ -363,6 +363,7 @@
     "detailView": {
       "tabs": {
         "details": "Details",
+        "tags": "Tags",
         "activity": "Activity",
         "notes": "Notes",
         "custom": "Custom Fields",

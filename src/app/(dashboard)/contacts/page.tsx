@@ -395,10 +395,14 @@ export default function ContactsPage() {
 
   return (
     <div
-      className={`-m-4 min-h-[calc(100vh-0px)] p-6 sm:-m-6 sm:p-10 space-y-8 ${ASCENT.canvas}`}
+      className={`relative -m-4 min-h-[calc(100vh-0px)] overflow-hidden p-6 sm:-m-6 sm:p-10 space-y-8 ${ASCENT.canvas}`}
     >
+      <div className="pointer-events-none absolute inset-0 opacity-80">
+        <div className="absolute -left-20 top-12 h-80 w-80 rounded-full bg-[#7B61FF]/14 blur-3xl" />
+        <div className="absolute -right-24 bottom-12 h-[28rem] w-[28rem] rounded-full bg-[#FF4F8A]/9 blur-3xl" />
+      </div>
       {/* Header */}
-      <div className={`flex flex-col gap-6 p-6 sm:p-7 ${ASCENT.panel}`}>
+      <div className={`relative flex flex-col gap-6 rounded-2xl border border-white/10 bg-[linear-gradient(160deg,rgba(13,14,20,0.82),rgba(42,27,77,0.22)_55%,rgba(13,14,20,0.78))] p-6 shadow-[0_18px_48px_rgba(7,8,18,0.38),inset_0_1px_0_rgba(255,255,255,0.08)] backdrop-blur-[8px] sm:p-7 ${ASCENT.panel}`}>
         <div className="flex flex-col gap-5 sm:flex-row sm:items-start sm:justify-between">
           <div className="space-y-2">
           <h1 className={`text-3xl font-bold tracking-tight ${ASCENT.title}`}>
@@ -485,7 +489,7 @@ export default function ContactsPage() {
                   setPage(0);
                 }}
                 placeholder={t('searchPlaceholder')}
-                className={`h-11 rounded-xl pl-9 ${ASCENT.field}`}
+                className={`h-11 rounded-xl border-white/12 bg-white/[0.03] pl-9 shadow-[inset_0_1px_0_rgba(255,255,255,0.05)] ${ASCENT.field}`}
               />
             </div>
 
@@ -494,7 +498,7 @@ export default function ContactsPage() {
                 render={
                   <Button
                     variant="outline"
-                    className={`h-11 shrink-0 ${ASCENT.outline}`}
+                    className={`h-11 shrink-0 border-white/12 bg-white/[0.03] hover:bg-[#7B61FF]/10 ${ASCENT.outline}`}
                   />
                 }
               >
@@ -506,7 +510,7 @@ export default function ContactsPage() {
                   </span>
                 )}
               </PopoverTrigger>
-              <PopoverContent align="start" className={`w-64 p-0 rounded-2xl ${ASCENT.popover}`}>
+              <PopoverContent align="start" className={`w-64 rounded-2xl border border-white/12 bg-[linear-gradient(170deg,rgba(19,21,33,0.98),rgba(30,20,56,0.94)_60%,rgba(14,15,24,0.98))] p-0 shadow-[0_20px_44px_rgba(6,8,18,0.5)] backdrop-blur-xl ${ASCENT.popover}`}>
                 <div className={`flex items-center justify-between px-4 py-3 border-b ${ASCENT.divider}`}>
                   <span className={`text-sm font-medium ${ASCENT.title}`}>
                     {t('filterByTags')}
@@ -590,7 +594,7 @@ export default function ContactsPage() {
 
       {/* Bulk action bar */}
       {selected.size > 0 && (
-        <div className={`flex items-center justify-between gap-4 px-5 py-3 ${ASCENT.card}`}>
+        <div className={`flex items-center justify-between gap-4 rounded-2xl border border-white/12 bg-[linear-gradient(170deg,rgba(255,255,255,0.05),rgba(255,255,255,0.015)_58%,rgba(255,255,255,0.01))] px-5 py-3 shadow-[0_14px_34px_rgba(7,8,18,0.34)] ${ASCENT.card}`}>
           <p className={`text-sm ${ASCENT.body}`}>
             <span className="inline-flex items-center justify-center rounded-full bg-[#FF4F8A] px-2 py-0.5 mr-2 text-xs font-semibold text-white">
               {selected.size}
@@ -622,10 +626,10 @@ export default function ContactsPage() {
       )}
 
       {/* Table */}
-      <div className={`${ASCENT.panel} overflow-hidden`}>
+      <div className={`overflow-hidden rounded-2xl border border-white/12 bg-[linear-gradient(170deg,rgba(255,255,255,0.05),rgba(255,255,255,0.016)_56%,rgba(255,255,255,0.01))] shadow-[0_16px_36px_rgba(7,8,18,0.36)] ${ASCENT.panel}`}>
         <Table>
           <TableHeader>
-            <TableRow className={`hover:bg-transparent border-b ${ASCENT.divider} bg-[var(--ascent-panel)]`}>
+            <TableRow className={`hover:bg-transparent border-b border-white/10 bg-[linear-gradient(180deg,rgba(123,97,255,0.12),rgba(255,255,255,0.02)_60%,transparent)] ${ASCENT.divider}`}>
               <TableHead className="w-10">
                 <Checkbox
                   checked={allOnPageSelected}
@@ -684,7 +688,7 @@ export default function ContactsPage() {
               contacts.map((contact) => (
                 <TableRow
                   key={contact.id}
-                  className={`cursor-pointer border-b last:border-b-0 ${ASCENT.divider} ${ASCENT.row}`}
+                  className={`cursor-pointer border-b border-white/8 last:border-b-0 ${ASCENT.divider} ${ASCENT.row}`}
                   onClick={() => openDetail(contact.id)}
                 >
                   <TableCell className="py-4" onClick={(e) => e.stopPropagation()}>
