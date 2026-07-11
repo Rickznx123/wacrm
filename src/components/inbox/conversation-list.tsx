@@ -9,7 +9,7 @@ import {
 } from "@/lib/inbox/conversations";
 import { cn } from "@/lib/utils";
 import type { Conversation, ConversationStatus, Tag } from "@/types";
-import { Search, ChevronDown, X } from "lucide-react";
+import { MoreVertical, Search, ChevronDown, X } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 import { useTranslations } from "next-intl";
 import { ASCENT, ASCENT_INTERACTIVE } from "@/lib/ui/ascent";
@@ -58,7 +58,6 @@ export function ConversationList({
 
   const STATUS_TABS: { label: string; value: StatusTab }[] = useMemo(
     () => [
-      { label: t("tabAll"), value: "all" },
       { label: t("tabInService"), value: "open" },
       { label: t("tabWaiting"), value: "pending" },
       { label: t("tabFinished"), value: "closed" },
@@ -241,14 +240,14 @@ export function ConversationList({
         </div>
 
         <div className="space-y-1.5">
-          <div className="relative">
-            <div className="flex min-w-0 items-center gap-0.5 overflow-x-auto pb-1 pr-3 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+          <div className="flex min-w-0 items-center gap-1">
+            <div className="flex min-w-0 flex-1 items-center gap-0.5">
               {STATUS_TABS.map((tab) => (
                 <button
                   key={tab.value}
                   onClick={() => setStatusTab(tab.value)}
                   className={cn(
-                    `inline-flex h-7 shrink-0 items-center justify-center rounded-full border px-2.5 text-xs font-medium ${ASCENT_INTERACTIVE}`,
+                    `inline-flex h-7 shrink-0 items-center justify-center rounded-full border px-2 text-xs font-medium ${ASCENT_INTERACTIVE}`,
                     statusTab === tab.value
                       ? "border-[#7B61FF] bg-[#7B61FF] text-white"
                       : "border-[var(--ascent-border)] text-[var(--ascent-subtle)] hover:bg-[var(--ascent-hover)] hover:text-[var(--ascent-title)]"
@@ -257,25 +256,49 @@ export function ConversationList({
                   {tab.label}
                 </button>
               ))}
+            </div>
 
-              <button
-                onClick={() => setUnreadOnly((prev) => !prev)}
+            <DropdownMenu>
+              <DropdownMenuTrigger
                 className={cn(
-                  `inline-flex h-7 shrink-0 items-center justify-center rounded-full border px-2.5 text-xs font-medium ${ASCENT_INTERACTIVE}`,
-                  unreadOnly
-                    ? "border-[#FF4F8A] bg-[#FF4F8A] text-white"
+                  `inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-full border ${ASCENT_INTERACTIVE}`,
+                  statusTab === "all"
+                    ? "border-[#7B61FF] bg-[#7B61FF] text-white"
                     : "border-[var(--ascent-border)] text-[var(--ascent-subtle)] hover:bg-[var(--ascent-hover)] hover:text-[var(--ascent-title)]"
                 )}
+                aria-label={t("tabAll")}
+                title={t("tabAll")}
               >
-                {t("filterUnread")}
-              </button>
-            </div>
-            <div className="pointer-events-none absolute inset-y-0 left-0 w-4 bg-gradient-to-r from-[var(--ascent-panel)] to-transparent" />
-            <div className="pointer-events-none absolute inset-y-0 right-0 w-6 bg-gradient-to-l from-[var(--ascent-panel)] to-transparent" />
+                <MoreVertical className="h-3.5 w-3.5" />
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className={ASCENT.popover}>
+                <DropdownMenuItem
+                  onClick={() => setStatusTab("all")}
+                  className={cn(
+                    "text-sm",
+                    statusTab === "all" ? "text-primary" : "text-[var(--ascent-body)]"
+                  )}
+                >
+                  {t("tabAll")}
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
           </div>
 
           <div className="flex flex-wrap items-center gap-1">
-          {tags.length > 0 && (
+            <button
+              onClick={() => setUnreadOnly((prev) => !prev)}
+              className={cn(
+                `inline-flex h-7 shrink-0 items-center justify-center rounded-full border px-2.5 text-xs font-medium ${ASCENT_INTERACTIVE}`,
+                unreadOnly
+                  ? "border-[#FF4F8A] bg-[#FF4F8A] text-white"
+                  : "border-[var(--ascent-border)] text-[var(--ascent-subtle)] hover:bg-[var(--ascent-hover)] hover:text-[var(--ascent-title)]"
+              )}
+            >
+              {t("filterUnread")}
+            </button>
+
+            {tags.length > 0 && (
             <DropdownMenu>
               <DropdownMenuTrigger
                 className={cn(
