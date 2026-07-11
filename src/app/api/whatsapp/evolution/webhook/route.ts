@@ -455,29 +455,29 @@ function logInboundMediaShape(
   for (const candidate of candidates) {
     const row = candidate.row
     const key = asObject(row.key)
+    const rootKeys = listObjectKeys(root)
+    const dataKeys = listObjectKeys(data)
     const msg = asObject(row.message)
-    const detectedMediaKinds = ['imageMessage', 'videoMessage', 'audioMessage', 'documentMessage']
-      .filter((kind) => Object.keys(asObject(msg[kind])).length > 0)
-      .map((kind) => kind.replace('Message', ''))
-    const hasLikelyBase64Field = Object.values(msg).some((part) => {
-      const partObj = asObject(part)
-      return (
-        typeof partObj.base64 === 'string' ||
-        typeof partObj.data === 'string' ||
-        typeof partObj.media === 'string'
-      )
-    })
+    const imageMessage = asObject(msg.imageMessage)
+    const audioMessage = asObject(msg.audioMessage)
+    const videoMessage = asObject(msg.videoMessage)
 
     logStructured('info', 'media.payload_shape', {
       ...logCtx,
       source: candidate.source,
       sourceIndex: candidate.index,
       messageId: asString(key.id) || asString(row.id) || null,
+      rootKeys,
+      dataKeys,
       rowKeys: listObjectKeys(row),
       messageTopLevelKeys: listObjectKeys(msg),
       messageNestedObjectKeys: listNestedObjectKeys(msg),
-      detectedMediaKinds,
-      hasLikelyBase64Field,
+      imageMessageKeys: listObjectKeys(imageMessage),
+      imageMessageNestedObjectKeys: listNestedObjectKeys(imageMessage),
+      audioMessageKeys: listObjectKeys(audioMessage),
+      audioMessageNestedObjectKeys: listNestedObjectKeys(audioMessage),
+      videoMessageKeys: listObjectKeys(videoMessage),
+      videoMessageNestedObjectKeys: listNestedObjectKeys(videoMessage),
     })
   }
 }
