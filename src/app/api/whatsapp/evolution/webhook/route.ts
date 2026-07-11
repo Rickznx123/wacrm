@@ -16,6 +16,7 @@ function supabaseAdmin() {
 type EvolutionWebhookEvent = {
   instanceId: string | null
   status: 'creating' | 'qrcode' | 'connected' | 'disconnected' | 'error'
+  isConnectionEvent: boolean
   phone: string | null
   profileName: string | null
   qrCode: string | null
@@ -216,9 +217,11 @@ function normalizeEvent(body: unknown): EvolutionWebhookEvent {
     asString(root.instanceId) ||
     null
 
-  const state = String(
-    asString(root.event) || asString(data.state) || asString(root.state) || 'disconnected',
-  ).toLowerCase()
+  const eventName = String(asString(root.event) || '').toLowerCase()
+  const stateRaw = asString(data.state) || asString(root.state) || ''
+  const state = String(stateRaw || 'disconnected').toLowerCase()
+  const isConnectionEvent =
+    eventName.includes('connection') || eventName.includes('qrcode') || !!stateRaw
 
   const status =
     state.includes('open') || state.includes('connected')
@@ -236,6 +239,7 @@ function normalizeEvent(body: unknown): EvolutionWebhookEvent {
   return {
     instanceId,
     status,
+    isConnectionEvent,
     phone: asString(payload.wuid) || asString(payload.number) || null,
     profileName: asString(payload.profileName) || asString(payload.pushName) || null,
     qrCode:
@@ -766,18 +770,21 @@ export async function POST(request: Request) {
     }
 
     const now = new Date().toISOString()
+    const channelPatch: Record<string, unknown> = {
+      qr_code: parsed.qrCode,
+      phone: parsed.phone,
+      profile_name: parsed.profileName,
+      last_error: parsed.lastError,
+    }
+    if (parsed.isConnectionEvent) {
+      channelPatch.status = parsed.status
+      channelPatch.connected_at = parsed.status === 'connected' ? now : null
+      channelPatch.disconnected_at = parsed.status === 'connected' ? null : now
+    }
 
     const { error } = await supabaseAdmin()
       .from('whatsapp_channels')
-      .update({
-        status: parsed.status,
-        qr_code: parsed.qrCode,
-        phone: parsed.phone,
-        profile_name: parsed.profileName,
-        last_error: parsed.lastError,
-        connected_at: parsed.status === 'connected' ? now : null,
-        disconnected_at: parsed.status === 'connected' ? null : now,
-      })
+      .update(channelPatch)
       .eq('provider', 'evolution')
       .eq('instance_id', parsed.instanceId)
 
