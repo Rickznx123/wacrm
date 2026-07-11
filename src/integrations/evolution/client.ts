@@ -9,6 +9,7 @@ interface EvolutionConfig {
 interface EvolutionFetchOptions {
   method?: 'GET' | 'POST' | 'DELETE'
   body?: unknown
+  timeoutMs?: number
 }
 
 const DEFAULT_TIMEOUT_MS = 10_000
@@ -32,6 +33,18 @@ interface EvolutionSendResult {
   }
   id?: string
   messageId?: string
+}
+
+interface EvolutionGetMediaResult {
+  mediaType?: string | null
+  fileName?: string | null
+  mimetype?: string | null
+  base64?: string | null
+  size?: {
+    fileLength?: unknown
+    height?: number | null
+    width?: number | null
+  } | null
 }
 
 function getConfig(): EvolutionConfig {
@@ -75,7 +88,9 @@ function sanitizeUpstreamErrorMessage(value: string): string {
 
 async function evolutionFetch(path: string, options: EvolutionFetchOptions = {}) {
   const cfg = getConfig()
-  const timeoutMs = getTimeoutMs()
+  const timeoutMs = Number.isFinite(options.timeoutMs)
+    ? Math.min(Math.max(Number(options.timeoutMs), 1), MAX_TIMEOUT_MS)
+    : getTimeoutMs()
 
   let response: Response
   try {
@@ -334,5 +349,49 @@ export const evolutionProvider: EvolutionProvider = {
       },
     )
     return { messageId: extractMessageId(payload) }
+  },
+
+  async getMediaBase64(instanceId, args) {
+    const payload = await evolutionFetchFirst(
+      [
+        `/chat/getBase64FromMediaMessage/${instanceId}`,
+        `/chat/getbase64frommediamessage/${instanceId}`,
+      ],
+      {
+        method: 'POST',
+        timeoutMs: args.timeoutMs,
+        body: {
+          message: {
+            key: {
+              id: args.messageId,
+            },
+          },
+          convertToMp4: !!args.convertToMp4,
+        },
+      },
+    )
+
+    const root = payload && typeof payload === 'object'
+      ? (payload as EvolutionGetMediaResult)
+      : {}
+
+    const base64 = typeof root.base64 === 'string' ? root.base64 : ''
+    if (!base64) {
+      throw new Error('Evolution API returned empty media base64')
+    }
+
+    return {
+      mediaType: typeof root.mediaType === 'string' ? root.mediaType : null,
+      fileName: typeof root.fileName === 'string' ? root.fileName : null,
+      mimetype: typeof root.mimetype === 'string' ? root.mimetype : null,
+      base64,
+      size: root.size
+        ? {
+            fileLength: root.size.fileLength ?? null,
+            height: typeof root.size.height === 'number' ? root.size.height : null,
+            width: typeof root.size.width === 'number' ? root.size.width : null,
+          }
+        : null,
+    }
   },
 }

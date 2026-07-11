@@ -32,4 +32,22 @@ export interface EvolutionProvider extends WhatsAppProvider {
       filename?: string
     },
   ): Promise<{ messageId: string }>
+  getMediaBase64(
+    instanceId: string,
+    args: {
+      messageId: string
+      convertToMp4?: boolean
+      timeoutMs?: number
+    },
+  ): Promise<{
+    mediaType: string | null
+    fileName: string | null
+    mimetype: string | null
+    base64: string
+    size: {
+      fileLength: unknown
+      height: number | null
+      width: number | null
+    } | null
+  }>
 }

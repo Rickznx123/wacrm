@@ -5,6 +5,7 @@ import { findExistingContact, isUniqueViolation } from '@/lib/contacts/dedupe'
 import { dispatchWebhookEvent } from '@/lib/webhooks/deliver'
 import { verifyEvolutionWebhookAuth } from '@/lib/whatsapp/evolution-webhook-auth'
 import { dispatchInboundToAiReply } from '@/lib/ai/auto-reply'
+import { resolveEvolutionProvider } from '@/integrations/registry'
 
 function supabaseAdmin() {
   return createAdminClient(
@@ -35,6 +36,8 @@ type ParsedInboundMessage = {
   mediaUrl: string | null
   timestampIso: string
 }
+
+const WHATSAPP_MEDIA_BUCKET = 'whatsapp-media'
 
 type ProcessingResult = 'ok' | 'transient_error' | 'permanent_error'
 
@@ -105,23 +108,85 @@ function asArray(value: unknown): unknown[] {
   return Array.isArray(value) ? value : []
 }
 
-function listObjectKeys(value: unknown): string[] {
-  if (!value || typeof value !== 'object' || Array.isArray(value)) return []
-  return Object.keys(value as Record<string, unknown>).sort((a, b) => a.localeCompare(b))
+function isInboundMediaType(contentType: ParsedInboundMessage['contentType']): boolean {
+  return (
+    contentType === 'image' ||
+    contentType === 'video' ||
+    contentType === 'audio' ||
+    contentType === 'document'
+  )
 }
 
-function listNestedObjectKeys(value: unknown): Record<string, string[]> {
-  const obj = asObject(value)
-  const out: Record<string, string[]> = {}
-  for (const [key, nested] of Object.entries(obj)) {
-    if (!nested || typeof nested !== 'object' || Array.isArray(nested)) continue
-    const nestedKeys = Object.keys(nested as Record<string, unknown>)
-      .sort((a, b) => a.localeCompare(b))
-    if (nestedKeys.length > 0) {
-      out[key] = nestedKeys
-    }
+function extensionFromMime(mime: string | null, fallback: string): string {
+  const normalized = String(mime || '').toLowerCase()
+  if (normalized.includes('image/jpeg')) return 'jpg'
+  if (normalized.includes('image/png')) return 'png'
+  if (normalized.includes('image/webp')) return 'webp'
+  if (normalized.includes('video/mp4')) return 'mp4'
+  if (normalized.includes('video/3gpp')) return '3gp'
+  if (normalized.includes('audio/ogg')) return 'ogg'
+  if (normalized.includes('audio/mpeg')) return 'mp3'
+  if (normalized.includes('audio/mp4')) return 'm4a'
+  if (normalized.includes('application/pdf')) return 'pdf'
+  return fallback
+}
+
+function fallbackMimeFromContentType(contentType: ParsedInboundMessage['contentType']): string {
+  if (contentType === 'image') return 'image/jpeg'
+  if (contentType === 'video') return 'video/mp4'
+  if (contentType === 'audio') return 'audio/mp4'
+  if (contentType === 'document') return 'application/octet-stream'
+  return 'application/octet-stream'
+}
+
+async function enrichInboundMediaUrl(
+  msg: ParsedInboundMessage,
+  instanceId: string | null,
+  accountId: string,
+  logCtx: WebhookLogContext,
+): Promise<ParsedInboundMessage> {
+  if (!isInboundMediaType(msg.contentType)) return msg
+  if (!instanceId) return { ...msg, mediaUrl: null }
+
+  try {
+    const evo = resolveEvolutionProvider()
+    const media = await evo.getMediaBase64(instanceId, {
+      messageId: msg.messageId,
+      // Kept true for audio to improve browser playback compatibility.
+      convertToMp4: msg.contentType === 'audio',
+      timeoutMs: 8000,
+    })
+
+    const mime = media.mimetype || fallbackMimeFromContentType(msg.contentType)
+    const ext = extensionFromMime(mime, msg.contentType === 'document' ? 'bin' : msg.contentType)
+    const objectPath = `account-${accountId}/${msg.messageId}.${ext}`
+    const bytes = Buffer.from(media.base64, 'base64')
+
+    const { error: uploadErr } = await supabaseAdmin()
+      .storage
+      .from(WHATSAPP_MEDIA_BUCKET)
+      .upload(objectPath, bytes, {
+        upsert: true,
+        contentType: mime,
+        cacheControl: '31536000',
+      })
+
+    if (uploadErr) throw uploadErr
+
+    const {
+      data: { publicUrl },
+    } = supabaseAdmin().storage.from(WHATSAPP_MEDIA_BUCKET).getPublicUrl(objectPath)
+
+    return { ...msg, mediaUrl: publicUrl || null }
+  } catch (error) {
+    logStructured('warn', 'media.enrich_failed', {
+      ...logCtx,
+      messageId: msg.messageId,
+      contentType: msg.contentType,
+      ...sanitizeErrorContext(error),
+    })
+    return { ...msg, mediaUrl: null }
   }
-  return out
 }
 
 function getErrorCode(error: unknown): string | null {
@@ -325,7 +390,7 @@ function parseInboundMessage(raw: Record<string, unknown>): ParsedInboundMessage
       profilePicUrl,
       contentType: 'image',
       text: asString(image.caption),
-      mediaUrl: asString(image.url) || asString(image.directPath) || null,
+      mediaUrl: null,
       timestampIso,
     }
   }
@@ -339,7 +404,7 @@ function parseInboundMessage(raw: Record<string, unknown>): ParsedInboundMessage
       profilePicUrl,
       contentType: 'video',
       text: asString(video.caption),
-      mediaUrl: asString(video.url) || asString(video.directPath) || null,
+      mediaUrl: null,
       timestampIso,
     }
   }
@@ -353,7 +418,7 @@ function parseInboundMessage(raw: Record<string, unknown>): ParsedInboundMessage
       profilePicUrl,
       contentType: 'document',
       text: asString(document.fileName),
-      mediaUrl: asString(document.url) || asString(document.directPath) || null,
+      mediaUrl: null,
       timestampIso,
     }
   }
@@ -367,7 +432,7 @@ function parseInboundMessage(raw: Record<string, unknown>): ParsedInboundMessage
       profilePicUrl,
       contentType: 'audio',
       text: null,
-      mediaUrl: asString(audio.url) || asString(audio.directPath) || null,
+      mediaUrl: null,
       timestampIso,
     }
   }
@@ -430,56 +495,6 @@ function parseInboundMessages(body: Record<string, unknown>): ParsedInboundMessa
   }
 
   return []
-}
-
-function logInboundMediaShape(
-  root: Record<string, unknown>,
-  logCtx: WebhookLogContext,
-) {
-  const data = asObject(root.data)
-  const candidates: Array<{ source: string; index: number; row: Record<string, unknown> }> = []
-
-  for (const [index, item] of asArray(data.messages).entries()) {
-    candidates.push({ source: 'data.messages', index, row: asObject(item) })
-  }
-  for (const [index, item] of asArray(root.messages).entries()) {
-    candidates.push({ source: 'root.messages', index, row: asObject(item) })
-  }
-  if (Object.keys(asObject(data.message)).length > 0) {
-    candidates.push({ source: 'data.message', index: 0, row: data })
-  }
-  if (Object.keys(asObject(root.message)).length > 0) {
-    candidates.push({ source: 'root.message', index: 0, row: root })
-  }
-
-  for (const candidate of candidates) {
-    const row = candidate.row
-    const key = asObject(row.key)
-    const rootKeys = listObjectKeys(root)
-    const dataKeys = listObjectKeys(data)
-    const msg = asObject(row.message)
-    const imageMessage = asObject(msg.imageMessage)
-    const audioMessage = asObject(msg.audioMessage)
-    const videoMessage = asObject(msg.videoMessage)
-
-    logStructured('info', 'media.payload_shape', {
-      ...logCtx,
-      source: candidate.source,
-      sourceIndex: candidate.index,
-      messageId: asString(key.id) || asString(row.id) || null,
-      rootKeys,
-      dataKeys,
-      rowKeys: listObjectKeys(row),
-      messageTopLevelKeys: listObjectKeys(msg),
-      messageNestedObjectKeys: listNestedObjectKeys(msg),
-      imageMessageKeys: listObjectKeys(imageMessage),
-      imageMessageNestedObjectKeys: listNestedObjectKeys(imageMessage),
-      audioMessageKeys: listObjectKeys(audioMessage),
-      audioMessageNestedObjectKeys: listNestedObjectKeys(audioMessage),
-      videoMessageKeys: listObjectKeys(videoMessage),
-      videoMessageNestedObjectKeys: listNestedObjectKeys(videoMessage),
-    })
-  }
 }
 
 function parseStatusUpdates(body: Record<string, unknown>): Array<{ messageId: string; status: EvolutionStatus }> {
@@ -890,13 +905,10 @@ export async function POST(request: Request) {
 
     let hasTransientError = false
 
-    // Temporary diagnostics: log inbound message payload shape for all supported
-    // envelope formats (arrays and single-message objects).
-    logInboundMediaShape(root, logCtx)
-
     const inbound = parseInboundMessages(root)
     for (const msg of inbound) {
-      const result = await persistInboundMessage(accountId, ownerUserId, msg, logCtx)
+      const enriched = await enrichInboundMediaUrl(msg, parsed.instanceId, accountId, logCtx)
+      const result = await persistInboundMessage(accountId, ownerUserId, enriched, logCtx)
       if (result === 'transient_error') hasTransientError = true
     }
 
