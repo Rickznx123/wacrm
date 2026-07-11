@@ -6,6 +6,7 @@ import { dispatchWebhookEvent } from '@/lib/webhooks/deliver'
 import { verifyEvolutionWebhookAuth } from '@/lib/whatsapp/evolution-webhook-auth'
 import { dispatchInboundToAiReply } from '@/lib/ai/auto-reply'
 import { resolveEvolutionProvider } from '@/integrations/registry'
+import { attachAutoNewLeadTag } from '@/lib/contacts/auto-lead-tag'
 
 function supabaseAdmin() {
   return createAdminClient(
@@ -575,7 +576,7 @@ async function findOrCreateContact(
         .update({ ...updates, updated_at: new Date().toISOString() })
         .eq('id', existing.id)
     }
-    return existing
+    return { contact: existing, wasCreated: false }
   }
 
   const { data, error } = await supabaseAdmin()
@@ -593,11 +594,11 @@ async function findOrCreateContact(
   if (error) {
     if (isUniqueViolation(error)) {
       const raced = await findExistingContact(supabaseAdmin(), accountId, phone)
-      if (raced) return raced
+      if (raced) return { contact: raced, wasCreated: false }
     }
     return null
   }
-  return data
+  return { contact: data, wasCreated: true }
 }
 
 async function findOrCreateConversation(accountId: string, ownerUserId: string, contactId: string) {
@@ -629,14 +630,31 @@ async function persistInboundMessage(
   msg: ParsedInboundMessage,
   logCtx: WebhookLogContext,
 ) {
-  const contact = await findOrCreateContact(
+  const contactOutcome = await findOrCreateContact(
     accountId,
     ownerUserId,
     msg.phone,
     msg.name,
     msg.profilePicUrl,
   )
-  if (!contact) return 'permanent_error' as ProcessingResult
+  if (!contactOutcome) return 'permanent_error' as ProcessingResult
+
+  const contact = contactOutcome.contact
+  if (contactOutcome.wasCreated) {
+    try {
+      await attachAutoNewLeadTag(supabaseAdmin(), {
+        accountId,
+        userId: ownerUserId,
+        contactId: contact.id,
+      })
+    } catch (tagErr) {
+      logStructured('warn', 'contact.auto_new_lead_tag_failed', {
+        ...logCtx,
+        contactId: contact.id,
+        ...sanitizeErrorContext(tagErr),
+      })
+    }
+  }
 
   const conv = await findOrCreateConversation(accountId, ownerUserId, contact.id)
   if (!conv) return 'permanent_error' as ProcessingResult

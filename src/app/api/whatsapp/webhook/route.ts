@@ -9,6 +9,7 @@ import { runAutomationsForTrigger } from '@/lib/automations/engine'
 import { dispatchInboundToFlows } from '@/lib/flows/engine'
 import { dispatchInboundToAiReply } from '@/lib/ai/auto-reply'
 import { dispatchWebhookEvent } from '@/lib/webhooks/deliver'
+import { attachAutoNewLeadTag } from '@/lib/contacts/auto-lead-tag'
 import {
   handleTemplateWebhookChange,
   isTemplateWebhookField,
@@ -594,6 +595,18 @@ async function processMessage(
   )
   if (!contactOutcome) return
   const contactRecord = contactOutcome.contact
+
+  if (contactOutcome.wasCreated) {
+    try {
+      await attachAutoNewLeadTag(supabaseAdmin(), {
+        accountId,
+        userId: configOwnerUserId,
+        contactId: contactRecord.id,
+      })
+    } catch (tagErr) {
+      console.warn('[webhook] failed to attach auto "Novo Lead" tag:', tagErr)
+    }
+  }
 
   // Find or create conversation
   const convResult = await findOrCreateConversation(
