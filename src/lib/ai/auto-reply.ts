@@ -22,6 +22,27 @@ interface DispatchArgs {
   configOwnerUserId: string
   /** Source webhook/provider path. Defaults to Meta for existing callers. */
   channelProvider?: 'meta' | 'evolution'
+  /** Inbound whatsapp message id, when available from caller context. */
+  inboundMessageId?: string | null
+}
+
+function logAutoReplyGate(
+  args: Pick<DispatchArgs, 'accountId' | 'conversationId' | 'inboundMessageId'>,
+  gate: string,
+  extra: Record<string, unknown> = {},
+) {
+  console.log(
+    JSON.stringify({
+      ts: new Date().toISOString(),
+      scope: 'ai_autoreply',
+      event: 'gate.return',
+      gate,
+      accountId: args.accountId,
+      conversationId: args.conversationId,
+      messageId: args.inboundMessageId ?? null,
+      ...extra,
+    }),
+  )
 }
 
 async function sendAiReply(
@@ -130,13 +151,17 @@ export async function dispatchInboundToAiReply(
     contactId,
     configOwnerUserId,
     channelProvider = 'meta',
+    inboundMessageId = null,
   } = args
 
   try {
     const db = supabaseAdmin()
 
     const config = await loadAiConfig(db, accountId)
-    if (!config || !config.autoReplyEnabled) return
+    if (!config || !config.autoReplyEnabled) {
+      logAutoReplyGate({ accountId, conversationId, inboundMessageId }, 'config_disabled_or_missing')
+      return
+    }
 
     // Deterministic, user-configured responders win over the LLM — the
     // caller already excludes messages a Flow consumed. Message-level
@@ -153,22 +178,50 @@ export async function dispatchInboundToAiReply(
       .eq('is_active', true)
       .in('trigger_type', ['new_message_received', 'keyword_match'])
       .limit(1)
-    if (autoResponders && autoResponders.length > 0) return
+    if (autoResponders && autoResponders.length > 0) {
+      logAutoReplyGate({ accountId, conversationId, inboundMessageId }, 'active_automation', {
+        activeAutomationCount: autoResponders.length,
+      })
+      return
+    }
 
     const { data: conv, error: convErr } = await db
       .from('conversations')
       .select('assigned_agent_id, ai_autoreply_disabled, ai_reply_count')
       .eq('id', conversationId)
       .maybeSingle()
-    if (convErr || !conv) return
-    if (conv.assigned_agent_id) return // a human owns this thread
-    if (conv.ai_autoreply_disabled) return // handed off / turned off here
+    if (convErr || !conv) {
+      logAutoReplyGate({ accountId, conversationId, inboundMessageId }, 'conversation_not_found_or_error', {
+        hasConversation: !!conv,
+        hasError: !!convErr,
+      })
+      return
+    }
+    if (conv.assigned_agent_id) {
+      logAutoReplyGate({ accountId, conversationId, inboundMessageId }, 'assigned_agent', {
+        assignedAgentId: conv.assigned_agent_id,
+      })
+      return // a human owns this thread
+    }
+    if (conv.ai_autoreply_disabled) {
+      logAutoReplyGate({ accountId, conversationId, inboundMessageId }, 'ai_autoreply_disabled')
+      return // handed off / turned off here
+    }
     // Cheap early-out; the authoritative cap check is the atomic claim
     // below (this read can race a concurrent inbound).
-    if (conv.ai_reply_count >= config.autoReplyMaxPerConversation) return
+    if (conv.ai_reply_count >= config.autoReplyMaxPerConversation) {
+      logAutoReplyGate({ accountId, conversationId, inboundMessageId }, 'reply_cap_reached', {
+        aiReplyCount: conv.ai_reply_count,
+        maxReplies: config.autoReplyMaxPerConversation,
+      })
+      return
+    }
 
     const messages = await buildConversationContext(db, conversationId)
-    if (messages.length === 0) return
+    if (messages.length === 0) {
+      logAutoReplyGate({ accountId, conversationId, inboundMessageId }, 'empty_context')
+      return
+    }
 
     // Account-wide throttle on the shared BYO key. The per-conversation
     // cap bounds one thread; this bounds a burst across many threads (a
@@ -180,6 +233,11 @@ export async function dispatchInboundToAiReply(
       RATE_LIMITS.aiAutoReplyAccount,
     )
     if (!acctLimit.success) {
+      logAutoReplyGate({ accountId, conversationId, inboundMessageId }, 'rate_limit', {
+        remaining: acctLimit.remaining,
+        limit: acctLimit.limit,
+        reset: acctLimit.reset,
+      })
       console.warn(
         `[ai auto-reply] account ${accountId} hit the per-account rate limit — skipping this inbound.`,
       )
@@ -221,6 +279,7 @@ export async function dispatchInboundToAiReply(
     })
 
     if (handoff || !text) {
+      logAutoReplyGate({ accountId, conversationId, inboundMessageId }, handoff ? 'handoff' : 'empty_text')
       // The model can't (or shouldn't) answer — stop auto-replying on
       // this thread and hand it to a human. We (a) pause the bot here
       // (sticky until re-enabled), (b) route the conversation to the
@@ -258,6 +317,12 @@ export async function dispatchInboundToAiReply(
       },
     )
     if (claimErr) {
+      logAutoReplyGate({ accountId, conversationId, inboundMessageId }, 'claim_slot_failed', {
+        claimErrorMessage:
+          typeof claimErr === 'object' && claimErr && 'message' in claimErr
+            ? String((claimErr as { message?: unknown }).message ?? '')
+            : null,
+      })
       // A real error here (vs. losing the cap race) is almost always a
       // deploy issue — e.g. `claim_ai_reply_slot` not EXECUTE-able by the
       // service role, or the migration not applied. Log it loudly: a
@@ -265,7 +330,10 @@ export async function dispatchInboundToAiReply(
       console.error('[ai auto-reply] claim_ai_reply_slot failed:', claimErr)
       return
     }
-    if (claimed !== true) return // lost the per-conversation cap race
+    if (claimed !== true) {
+      logAutoReplyGate({ accountId, conversationId, inboundMessageId }, 'claim_slot_not_granted')
+      return // lost the per-conversation cap race
+    }
 
     await sendAiReply({
       accountId,
@@ -276,6 +344,12 @@ export async function dispatchInboundToAiReply(
       provider: channelProvider,
     })
   } catch (err) {
+    logAutoReplyGate({ accountId, conversationId, inboundMessageId }, 'dispatch_error', {
+      errorMessage:
+        typeof err === 'object' && err && 'message' in err
+          ? String((err as { message?: unknown }).message ?? '')
+          : String(err ?? ''),
+    })
     console.error('[ai auto-reply] dispatch failed:', err)
   }
 }

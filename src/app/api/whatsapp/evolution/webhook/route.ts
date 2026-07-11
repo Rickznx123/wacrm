@@ -681,6 +681,7 @@ async function persistInboundMessage(
         contactId: contact.id,
         configOwnerUserId: ownerUserId,
         channelProvider: 'evolution',
+        inboundMessageId: msg.messageId,
       })
     } catch (aiErr) {
       logStructured('error', 'ai.autoreply_dispatch_failed', {

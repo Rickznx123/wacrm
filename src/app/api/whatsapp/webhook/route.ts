@@ -820,6 +820,7 @@ async function processMessage(
       contactId: contactRecord.id,
       configOwnerUserId,
       channelProvider: 'meta',
+      inboundMessageId: message.id,
     })
   }
 
