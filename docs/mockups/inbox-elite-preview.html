@@ -1,0 +1,369 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Inbox Elite Preview</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg-0: #0d0e14;
+      --bg-1: #2a1b4d;
+      --brand: #7b61ff;
+      --magenta: #ff4f8a;
+      --text-0: #eef0ff;
+      --text-1: #c8cae2;
+      --text-2: #8f94b7;
+      --line: rgba(255,255,255,0.12);
+      --glass: rgba(28, 21, 45, 0.42);
+      --glass-strong: rgba(20, 16, 35, 0.62);
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      color: var(--text-0);
+      background:
+        radial-gradient(900px 500px at 10% 8%, rgba(123,97,255,0.18), transparent 45%),
+        radial-gradient(900px 500px at 88% 100%, rgba(255,79,138,0.1), transparent 45%),
+        linear-gradient(145deg, var(--bg-0), #141525 40%, var(--bg-1));
+      overflow: hidden;
+    }
+
+    body::before {
+      content: "";
+      position: fixed;
+      inset: 0;
+      opacity: 0.06;
+      pointer-events: none;
+      background-image:
+        repeating-radial-gradient(circle at 0 0, rgba(255,255,255,0.5) 0 1px, transparent 1px 3px);
+      background-size: 3px 3px;
+      mix-blend-mode: soft-light;
+    }
+
+    .shell {
+      height: 100vh;
+      display: grid;
+      grid-template-columns: 320px 1fr 320px;
+      gap: 14px;
+      padding: 14px;
+    }
+
+    .panel {
+      background: linear-gradient(180deg, rgba(255,255,255,0.03), rgba(255,255,255,0.01));
+      border: 1px solid rgba(255,255,255,0.11);
+      border-radius: 18px;
+      backdrop-filter: blur(14px) saturate(130%);
+      -webkit-backdrop-filter: blur(14px) saturate(130%);
+      box-shadow:
+        0 14px 50px rgba(6, 8, 20, 0.45),
+        inset 0 1px 0 rgba(255,255,255,0.08);
+      overflow: hidden;
+    }
+
+    .list-head {
+      padding: 18px 18px 14px;
+      border-bottom: 1px solid rgba(255,255,255,0.08);
+      background: linear-gradient(180deg, rgba(123,97,255,0.1), transparent 65%);
+    }
+
+    .search {
+      height: 40px;
+      border: 1px solid rgba(255,255,255,0.12);
+      border-radius: 12px;
+      background: rgba(12, 12, 20, 0.45);
+      color: var(--text-1);
+      display: flex;
+      align-items: center;
+      padding: 0 12px;
+      font-size: 13px;
+      letter-spacing: .1px;
+    }
+
+    .status-row {
+      margin-top: 12px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .pill {
+      height: 30px;
+      border-radius: 999px;
+      padding: 0 12px;
+      display: inline-flex;
+      align-items: center;
+      font-size: 12px;
+      font-weight: 600;
+      letter-spacing: .1px;
+      border: 1px solid rgba(255,255,255,0.14);
+      color: var(--text-1);
+      background: rgba(255,255,255,0.03);
+      transition: all 220ms ease;
+    }
+
+    .pill.active {
+      color: white;
+      background: linear-gradient(145deg, rgba(123,97,255,0.55), rgba(123,97,255,0.85));
+      border-color: rgba(173,160,255,0.8);
+      box-shadow: 0 0 0 1px rgba(123,97,255,0.35), 0 8px 20px rgba(80,64,170,0.5);
+    }
+
+    .pill.ghost {
+      width: 30px;
+      justify-content: center;
+      padding: 0;
+    }
+
+    .pill.unread {
+      border-color: rgba(255,79,138,0.4);
+      color: #ffd7e6;
+      background: rgba(255,79,138,0.14);
+      margin-top: 8px;
+      width: fit-content;
+    }
+
+    .conv-list {
+      padding: 10px;
+      display: grid;
+      gap: 9px;
+      height: calc(100% - 145px);
+      overflow: auto;
+    }
+
+    .conv {
+      border-radius: 14px;
+      border: 1px solid rgba(255,255,255,0.1);
+      background: linear-gradient(180deg, rgba(255,255,255,0.04), rgba(255,255,255,0.02));
+      padding: 12px;
+      display: grid;
+      gap: 8px;
+      transition: transform 180ms ease, border-color 180ms ease, box-shadow 180ms ease;
+      box-shadow: 0 10px 26px rgba(7, 9, 20, 0.35);
+    }
+
+    .conv.active {
+      border-color: rgba(123,97,255,0.65);
+      box-shadow:
+        0 0 0 1px rgba(123,97,255,0.25),
+        0 14px 34px rgba(30, 20, 80, 0.45);
+      background: linear-gradient(180deg, rgba(123,97,255,0.2), rgba(123,97,255,0.08));
+    }
+
+    .conv:hover {
+      transform: translateY(-1px) scale(1.006);
+      border-color: rgba(164,148,255,0.45);
+    }
+
+    .line {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .name {
+      font-size: 13.5px;
+      font-weight: 700;
+      color: #f7f8ff;
+      letter-spacing: 0.1px;
+    }
+
+    .preview {
+      font-size: 12.5px;
+      color: var(--text-2);
+      font-weight: 500;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .time {
+      font-size: 11px;
+      color: #9da2cb;
+      font-weight: 600;
+    }
+
+    .badge {
+      min-width: 18px;
+      height: 18px;
+      border-radius: 999px;
+      padding: 0 5px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 10px;
+      font-weight: 700;
+      background: var(--magenta);
+      color: #fff;
+      box-shadow: 0 8px 18px rgba(255,79,138,0.45);
+    }
+
+    .thread {
+      display: grid;
+      grid-template-rows: 64px 1fr 76px;
+      height: 100%;
+      position: relative;
+      background: linear-gradient(180deg, rgba(255,255,255,0.025), rgba(255,255,255,0.008));
+    }
+
+    .thread::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      background: radial-gradient(1000px 380px at 55% -20%, rgba(123,97,255,0.16), transparent 60%);
+    }
+
+    .thread-top {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 18px;
+      border-bottom: 1px solid rgba(255,255,255,0.08);
+      background: rgba(17, 14, 29, 0.5);
+      backdrop-filter: blur(10px);
+      z-index: 1;
+    }
+
+    .thread-body {
+      padding: 18px;
+      display: grid;
+      gap: 10px;
+      align-content: start;
+      z-index: 1;
+    }
+
+    .bubble {
+      max-width: 68%;
+      border-radius: 14px;
+      padding: 11px 12px;
+      border: 1px solid rgba(255,255,255,0.1);
+      color: var(--text-1);
+      font-size: 13px;
+      line-height: 1.45;
+      box-shadow: 0 12px 24px rgba(7, 8, 16, 0.28);
+      background: rgba(255,255,255,0.03);
+    }
+
+    .bubble.mine {
+      margin-left: auto;
+      background: linear-gradient(150deg, rgba(123,97,255,0.74), rgba(94,73,193,0.92));
+      color: #fff;
+      border-color: rgba(185,175,255,0.58);
+      box-shadow: 0 12px 30px rgba(68, 48, 170, 0.4);
+    }
+
+    .thread-bottom {
+      border-top: 1px solid rgba(255,255,255,0.08);
+      display: grid;
+      align-items: center;
+      padding: 0 16px;
+      z-index: 1;
+    }
+
+    .composer {
+      height: 44px;
+      border-radius: 12px;
+      border: 1px solid rgba(255,255,255,0.12);
+      background: rgba(10,10,18,0.52);
+      color: var(--text-2);
+      padding: 0 12px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      font-size: 13px;
+    }
+
+    .side {
+      padding: 14px;
+      display: grid;
+      gap: 10px;
+      align-content: start;
+      background: linear-gradient(180deg, rgba(255,255,255,0.03), rgba(255,255,255,0.01));
+    }
+
+    .mini {
+      border: 1px solid rgba(255,255,255,0.1);
+      border-radius: 14px;
+      padding: 12px;
+      background: rgba(255,255,255,0.03);
+      box-shadow: 0 12px 24px rgba(8,10,18,0.3);
+      font-size: 12.5px;
+      color: var(--text-1);
+    }
+
+    @media (max-width: 1200px) {
+      .shell { grid-template-columns: 300px 1fr; }
+      .side { display: none; }
+    }
+  </style>
+</head>
+<body>
+  <main class="shell">
+    <section class="panel">
+      <div class="list-head">
+        <div class="search">Search conversations...</div>
+        <div class="status-row">
+          <span class="pill active">Em atendimento</span>
+          <span class="pill">Em espera</span>
+          <span class="pill">Finalizado</span>
+          <span class="pill ghost">⋮</span>
+        </div>
+        <div class="pill unread">Nao lidas</div>
+      </div>
+      <div class="conv-list">
+        <article class="conv active">
+          <div class="line"><span class="name">Marina Rocha</span><span class="time">2m</span></div>
+          <div class="line"><span class="preview">Perfeito, pode enviar o contrato com os ajustes finais...</span><span class="badge">3</span></div>
+        </article>
+        <article class="conv">
+          <div class="line"><span class="name">Felipe Costa</span><span class="time">8m</span></div>
+          <div class="line"><span class="preview">Conseguimos antecipar a reuniao para quarta?</span><span></span></div>
+        </article>
+        <article class="conv">
+          <div class="line"><span class="name">Studio Voga</span><span class="time">18m</span></div>
+          <div class="line"><span class="preview">Obrigada, estamos analisando internamente.</span><span></span></div>
+        </article>
+        <article class="conv">
+          <div class="line"><span class="name">Arthur Menezes</span><span class="time">31m</span></div>
+          <div class="line"><span class="preview">Tem como parcelar essa proposta em 3x?</span><span class="badge">1</span></div>
+        </article>
+      </div>
+    </section>
+
+    <section class="panel thread">
+      <header class="thread-top">
+        <div>
+          <div style="font-size:14px;font-weight:700;">Marina Rocha</div>
+          <div style="font-size:12px;color:#9da2cb;">Last seen 1m ago</div>
+        </div>
+        <div class="pill">Em atendimento</div>
+      </header>
+      <div class="thread-body">
+        <div class="bubble">Oi! Recebi a proposta, queria entender melhor os prazos.</div>
+        <div class="bubble mine">Perfeito. Posso te enviar um cronograma em 3 etapas ainda hoje.</div>
+        <div class="bubble">Excelente, manda por aqui por favor.</div>
+      </div>
+      <footer class="thread-bottom">
+        <div class="composer">
+          <span>Type a message...</span>
+          <span style="opacity:.75">Send</span>
+        </div>
+      </footer>
+    </section>
+
+    <aside class="panel side">
+      <div class="mini"><strong style="font-weight:700;color:#f0f1ff;">Contact</strong><br/><br/>Company: Studio Rocha<br/>Pipeline: Qualified Lead</div>
+      <div class="mini"><strong style="font-weight:700;color:#f0f1ff;">Tags</strong><br/><br/>VIP, Proposal, Q3</div>
+      <div class="mini"><strong style="font-weight:700;color:#f0f1ff;">Notes</strong><br/><br/>Prefers async follow-up and concise docs.</div>
+    </aside>
+  </main>
+</body>
+</html>
