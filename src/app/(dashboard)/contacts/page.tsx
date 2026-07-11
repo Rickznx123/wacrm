@@ -420,23 +420,36 @@ export default function ContactsPage() {
               {t('customFieldsBtn')}
             </Button>
           )}
-          {evolutionConnected && (
-            <GatedButton
-              variant="outline"
-              canAct={canEdit}
-              gateReason="sync contacts from WhatsApp"
-              onClick={handleSyncFromWhatsApp}
-              disabled={syncing}
-              className={`h-11 px-4 ${ASCENT.outline} ${ASCENT_INTERACTIVE}`}
-            >
-              {syncing ? (
-                <Loader2 className="size-4 animate-spin" />
-              ) : (
-                <RefreshCw className="size-4" />
-              )}
-              {syncing ? t('syncingEvolution') : t('syncEvolutionBtn')}
-            </GatedButton>
-          )}
+          {evolutionConnected &&
+            (canEditSettings ? (
+              <GatedButton
+                variant="outline"
+                canAct={canEditSettings}
+                gateReason="sync contacts from WhatsApp"
+                onClick={handleSyncFromWhatsApp}
+                disabled={syncing}
+                className={`h-11 px-4 ${ASCENT.outline} ${ASCENT_INTERACTIVE}`}
+              >
+                {syncing ? (
+                  <Loader2 className="size-4 animate-spin" />
+                ) : (
+                  <RefreshCw className="size-4" />
+                )}
+                {syncing ? t('syncingEvolution') : t('syncEvolutionBtn')}
+              </GatedButton>
+            ) : (
+              <div className="flex flex-col items-start gap-1">
+                <Button
+                  variant="outline"
+                  disabled
+                  className={`h-11 px-4 ${ASCENT.outline} opacity-60`}
+                >
+                  <RefreshCw className="size-4" />
+                  {t('syncEvolutionBtn')}
+                </Button>
+                <p className={`text-xs ${ASCENT.subtle}`}>{t('syncAdminOnly')}</p>
+              </div>
+            ))}
           <GatedButton
             variant="outline"
             canAct={canEdit}

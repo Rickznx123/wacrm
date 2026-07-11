@@ -9,6 +9,8 @@ import { logAiUsage } from './usage'
 import { latestUserMessage } from './query'
 import { engineSendText } from '@/lib/flows/meta-send'
 import { checkRateLimit, RATE_LIMITS } from '@/lib/rate-limit'
+import { resolveEvolutionProvider } from '@/integrations/registry'
+import { sanitizePhoneForMeta, isValidE164 } from '@/lib/whatsapp/phone-utils'
 
 interface DispatchArgs {
   /** Tenancy key — drives config, contact, and whatsapp_config lookups. */
@@ -18,6 +20,86 @@ interface DispatchArgs {
   /** The account's WhatsApp config owner, used for the outbound send's
    *  audit columns (mirrors how the flow runner passes it through). */
   configOwnerUserId: string
+  /** Source webhook/provider path. Defaults to Meta for existing callers. */
+  channelProvider?: 'meta' | 'evolution'
+}
+
+async function sendAiReply(
+  args: {
+    accountId: string
+    userId: string
+    conversationId: string
+    contactId: string
+    text: string
+    provider: 'meta' | 'evolution'
+  },
+): Promise<void> {
+  if (args.provider === 'meta') {
+    await engineSendText({
+      accountId: args.accountId,
+      userId: args.userId,
+      conversationId: args.conversationId,
+      contactId: args.contactId,
+      text: args.text,
+      aiGenerated: true,
+    })
+    return
+  }
+
+  const db = supabaseAdmin()
+  const { data: contact, error: contactErr } = await db
+    .from('contacts')
+    .select('id, phone')
+    .eq('id', args.contactId)
+    .eq('account_id', args.accountId)
+    .maybeSingle()
+  if (contactErr || !contact?.phone) {
+    throw new Error('contact not found for this account')
+  }
+
+  const sanitized = sanitizePhoneForMeta(contact.phone)
+  if (!isValidE164(sanitized)) {
+    throw new Error(`contact phone invalid: ${contact.phone}`)
+  }
+
+  const { data: channel, error: channelErr } = await db
+    .from('whatsapp_channels')
+    .select('instance_id, status')
+    .eq('account_id', args.accountId)
+    .eq('provider', 'evolution')
+    .maybeSingle()
+  if (
+    channelErr ||
+    !channel?.instance_id ||
+    String(channel.status ?? '').toLowerCase() !== 'connected'
+  ) {
+    throw new Error('evolution channel is not connected for this account')
+  }
+
+  const evo = resolveEvolutionProvider()
+  const { messageId } = await evo.sendText(channel.instance_id, sanitized, args.text)
+
+  const { error: msgErr } = await db.from('messages').insert({
+    conversation_id: args.conversationId,
+    sender_type: 'bot',
+    content_type: 'text',
+    content_text: args.text,
+    message_id: messageId,
+    status: 'sent',
+    ai_generated: true,
+  })
+  if (msgErr) {
+    throw new Error(`sent to Evolution but DB insert failed: ${msgErr.message}`)
+  }
+
+  await db
+    .from('conversations')
+    .update({
+      last_message_text: args.text,
+      last_message_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+    })
+    .eq('id', args.conversationId)
 }
 
 /**
@@ -42,7 +124,13 @@ interface DispatchArgs {
 export async function dispatchInboundToAiReply(
   args: DispatchArgs,
 ): Promise<void> {
-  const { accountId, conversationId, contactId, configOwnerUserId } = args
+  const {
+    accountId,
+    conversationId,
+    contactId,
+    configOwnerUserId,
+    channelProvider = 'meta',
+  } = args
 
   try {
     const db = supabaseAdmin()
@@ -179,13 +267,13 @@ export async function dispatchInboundToAiReply(
     }
     if (claimed !== true) return // lost the per-conversation cap race
 
-    await engineSendText({
+    await sendAiReply({
       accountId,
       userId: configOwnerUserId,
       conversationId,
       contactId,
       text,
-      aiGenerated: true,
+      provider: channelProvider,
     })
   } catch (err) {
     console.error('[ai auto-reply] dispatch failed:', err)

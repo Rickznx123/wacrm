@@ -14,6 +14,11 @@ interface AiConfigRow {
   embeddings_api_key: string | null
 }
 
+function readOpenAiFallbackKey(): string | null {
+  const key = process.env.OPENAI_API_KEY?.trim()
+  return key && key.length > 0 ? key : null
+}
+
 const CONFIG_COLUMNS =
   'provider, model, api_key, system_prompt, is_active, auto_reply_enabled, auto_reply_max_per_conversation, handoff_agent_id, embeddings_api_key'
 
@@ -50,7 +55,8 @@ export async function loadAiConfig(
   // Defensive: the column is NOT NULL, but a partial write / manual DB
   // edit could leave it empty. Treat a missing key as "not configured"
   // rather than letting decrypt() throw on null.
-  if (!row.api_key) return null
+  const fallbackOpenAiKey = row.provider === 'openai' ? readOpenAiFallbackKey() : null
+  if (!row.api_key && !fallbackOpenAiKey) return null
 
   // The embeddings key is optional and independent of the chat key —
   // a corrupt/undecryptable one should downgrade to lexical KB, not
@@ -72,7 +78,7 @@ export async function loadAiConfig(
   return {
     provider: row.provider,
     model: row.model,
-    apiKey: decrypt(row.api_key),
+    apiKey: row.api_key ? decrypt(row.api_key) : (fallbackOpenAiKey as string),
     systemPrompt: row.system_prompt,
     isActive: row.is_active,
     autoReplyEnabled: row.auto_reply_enabled,

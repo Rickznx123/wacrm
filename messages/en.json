@@ -17,12 +17,12 @@
   "Sidebar": {
     "title": "ASCENT CRM",
     "dashboard": "Dashboard",
-    "inbox": "Inbox",
+    "inbox": "Conversations",
     "notifications": "Notifications",
     "contacts": "Contacts",
-    "pipelines": "Pipelines",
+    "pipelines": "Sales Funnel",
     "broadcasts": "Broadcasts",
-    "automations": "Automations",
+    "automations": "Automated Replies",
     "flows": "Flows",
     "aiAgents": "AI Agents",
     "settings": "Settings",
@@ -42,12 +42,12 @@
   },
   "Header": {
     "dashboard": "Dashboard",
-    "inbox": "Inbox",
+    "inbox": "Conversations",
     "notifications": "Notifications",
     "contacts": "Contacts",
-    "pipelines": "Pipelines",
+    "pipelines": "Sales Funnel",
     "broadcasts": "Broadcasts",
-    "automations": "Automations",
+    "automations": "Automated Replies",
     "settings": "Settings",
     "openMenu": "Open menu",
     "openAccountMenu": "Open account menu",
@@ -107,7 +107,7 @@
       "title": "Pipeline Value",
       "description": "Open deals by stage",
       "noOpenDeals": "No open deals yet",
-      "noOpenDealsHint": "Create deals in Pipelines to see stage breakdowns here.",
+      "noOpenDealsHint": "Create deals in Sales Funnel to see stage breakdowns here.",
       "dealCount": "{count} {count, plural, =1 {deal} other {deals}}",
       "total": "Total",
       "ariaLabel": "Pipeline value by stage"
@@ -283,6 +283,7 @@
       "importBtn": "Import",
       "syncEvolutionBtn": "Sync from WhatsApp",
       "syncingEvolution": "Syncing...",
+      "syncAdminOnly": "Only administrators can sync contacts.",
       "addContactBtn": "Add Contact",
       "searchPlaceholder": "Search by name, phone, or email...",
       "filterByTags": "Filter by tags",
@@ -773,7 +774,7 @@
   },
   "Automations": {
     "list": {
-      "title": "Automations",
+      "title": "Automated Replies",
       "subtitle": "Build workflows that react to WhatsApp® events automatically.",
       "create": "Create Automation",
       "retry": "Retry",
@@ -805,7 +806,7 @@
     "edit": {
       "loading": "Loading...",
       "loadError": "Failed to load ({status})",
-      "back": "Back to Automations"
+      "back": "Back to Automated Replies"
     },
     "logs": {
       "title": "Execution logs",
@@ -888,7 +889,7 @@
       "save": "Save",
       "saveDraft": "Save Draft",
       "untitled": "Untitled automation",
-      "backToAutomations": "Back to automations",
+      "backToAutomations": "Back to automated replies",
       "toasts": {
         "saved": "Automation saved",
         "created": "Automation created",
@@ -1502,6 +1503,7 @@
       "profile": "Your profile",
       "security": "Login & security",
       "appearance": "Appearance",
+      "ai": "AI assistant",
       "channels": "Channels",
       "whatsapp": "WhatsApp",
       "templates": "Templates",

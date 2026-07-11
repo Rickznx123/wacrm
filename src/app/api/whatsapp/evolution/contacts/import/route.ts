@@ -38,7 +38,15 @@ export async function POST() {
 
         if (result.created) imported++
         else skipped++
-      } catch {
+      } catch (err) {
+        console.error('[evolution contacts import] failed to process contact', {
+          accountId: ctx.accountId,
+          userId: ctx.userId,
+          phone: contact.phone,
+          name: contact.name ?? null,
+          hasProfilePicUrl: Boolean(contact.profilePicUrl),
+          error: err instanceof Error ? err.message : String(err),
+        })
         skipped++
       }
     }

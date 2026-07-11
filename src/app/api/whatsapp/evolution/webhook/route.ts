@@ -4,6 +4,7 @@ import { normalizePhone } from '@/lib/whatsapp/phone-utils'
 import { findExistingContact, isUniqueViolation } from '@/lib/contacts/dedupe'
 import { dispatchWebhookEvent } from '@/lib/webhooks/deliver'
 import { verifyEvolutionWebhookAuth } from '@/lib/whatsapp/evolution-webhook-auth'
+import { dispatchInboundToAiReply } from '@/lib/ai/auto-reply'
 
 function supabaseAdmin() {
   return createAdminClient(
@@ -607,6 +608,25 @@ async function persistInboundMessage(
     content_type: msg.contentType,
     text: msg.text,
   })
+
+  if (msg.contentType === 'text' && (msg.text ?? '').trim()) {
+    try {
+      await dispatchInboundToAiReply({
+        accountId,
+        conversationId: conv.row.id,
+        contactId: contact.id,
+        configOwnerUserId: ownerUserId,
+        channelProvider: 'evolution',
+      })
+    } catch (aiErr) {
+      logStructured('error', 'ai.autoreply_dispatch_failed', {
+        ...logCtx,
+        stage: 'ai.auto_reply',
+        messageId: msg.messageId,
+        ...sanitizeErrorContext(aiErr),
+      })
+    }
+  }
 
   return 'ok' as ProcessingResult
 }

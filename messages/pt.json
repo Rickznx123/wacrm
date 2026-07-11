@@ -17,12 +17,12 @@
   "Sidebar": {
     "title": "ASCENT CRM",
     "dashboard": "Dashboard",
-    "inbox": "Caixa de entrada",
+    "inbox": "Conversas",
     "notifications": "Notificações",
     "contacts": "Contatos",
-    "pipelines": "Pipelines",
+    "pipelines": "Funil de Vendas",
     "broadcasts": "Broadcasts",
-    "automations": "Automações",
+    "automations": "Respostas Automáticas",
     "flows": "Flows",
     "aiAgents": "Agentes AI",
     "settings": "Configurações",
@@ -42,12 +42,12 @@
   },
   "Header": {
     "dashboard": "Dashboard",
-    "inbox": "Caixa de entrada",
+    "inbox": "Conversas",
     "notifications": "Notificações",
     "contacts": "Contatos",
-    "pipelines": "Pipelines",
+    "pipelines": "Funil de Vendas",
     "broadcasts": "Broadcasts",
-    "automations": "Automações",
+    "automations": "Respostas Automáticas",
     "settings": "Configurações",
     "openMenu": "Abrir menu",
     "openAccountMenu": "Abrir menu da conta",
@@ -107,7 +107,7 @@
       "title": "Valor do Pipeline",
       "description": "Negócios abertos por estágio",
       "noOpenDeals": "Nenhum negócio aberto ainda",
-      "noOpenDealsHint": "Crie negócios em Pipelines para ver os detalhes de estágio aqui.",
+      "noOpenDealsHint": "Crie negócios no Funil de Vendas para ver os detalhes de estágio aqui.",
       "dealCount": "{count} {count, plural, =1 {negócio} other {negócios}}",
       "total": "Total",
       "ariaLabel": "Valor do pipeline por estágio"
@@ -283,6 +283,7 @@
       "importBtn": "Importar",
       "syncEvolutionBtn": "Sincronizar do WhatsApp",
       "syncingEvolution": "Sincronizando...",
+      "syncAdminOnly": "Apenas administradores podem sincronizar contatos.",
       "addContactBtn": "Adicionar Contato",
       "searchPlaceholder": "Pesquisar por nome, telefone ou email...",
       "filterByTags": "Filtrar por tags",
@@ -773,7 +774,7 @@
   },
   "Automations": {
     "list": {
-      "title": "Automações",
+      "title": "Respostas Automáticas",
       "subtitle": "Construa workflows que reagem a eventos do WhatsApp® automaticamente.",
       "create": "Criar Automação",
       "retry": "Tentar novamente",
@@ -805,7 +806,7 @@
     "edit": {
       "loading": "Carregando...",
       "loadError": "Falha ao carregar ({status})",
-      "back": "Voltar para Automações"
+      "back": "Voltar para Respostas Automáticas"
     },
     "logs": {
       "title": "Logs de execução",
@@ -888,7 +889,7 @@
       "save": "Salvar",
       "saveDraft": "Salvar Rascunho",
       "untitled": "Automação sem título",
-      "backToAutomations": "Voltar para automações",
+      "backToAutomations": "Voltar para respostas automáticas",
       "toasts": {
         "saved": "Automação salva",
         "created": "Automação criada",
@@ -1492,6 +1493,7 @@
       "profile": "Seu perfil",
       "security": "Login & segurança",
       "appearance": "Aparência",
+      "ai": "Assistente AI",
       "channels": "Canais",
       "whatsapp": "WhatsApp",
       "templates": "Modelos",
