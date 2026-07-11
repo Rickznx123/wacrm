@@ -212,17 +212,17 @@ function StageColumn({
     // restore the flex-1 share-the-row behavior. The droppable ref is
     // on the inner messages region below — intentionally NOT here, so
     // a drag over the column header doesn't highlight the whole column.
-    <div className={`flex w-[85vw] min-w-[260px] max-w-[320px] shrink-0 snap-start flex-col rounded-xl border bg-[var(--ascent-card)] p-4 lg:w-auto lg:max-w-none lg:flex-1 lg:basis-[260px] lg:shrink lg:snap-none ${ASCENT.divider}`}>
+    <div className={`flex w-[85vw] min-w-[260px] max-w-[320px] shrink-0 snap-start flex-col rounded-2xl border border-white/12 bg-[linear-gradient(170deg,rgba(255,255,255,0.05),rgba(255,255,255,0.016)_56%,rgba(255,255,255,0.01))] p-4 shadow-[0_14px_30px_rgba(7,8,18,0.34)] lg:w-auto lg:max-w-none lg:flex-1 lg:basis-[260px] lg:shrink lg:snap-none ${ASCENT.divider}`}>
       {/* 3px colored top border — sits above the column's padding */}
       <div
-        className="-mx-4 -mt-4 h-[3px] rounded-t-xl"
+        className="-mx-4 -mt-4 h-[3px] rounded-t-2xl"
         style={{ backgroundColor: stage.color }}
       />
       <div className="flex items-center justify-between pt-3">
         <h3 className={`truncate text-sm font-semibold ${ASCENT.title}`}>
           {stage.name}
         </h3>
-        <span className={`shrink-0 rounded-full bg-[var(--ascent-field)] px-2 py-0.5 text-[11px] font-medium ${ASCENT.subtle}`}>
+        <span className={`shrink-0 rounded-full border border-white/12 bg-white/[0.03] px-2 py-0.5 text-[11px] font-medium shadow-[0_6px_14px_rgba(8,10,22,0.24)] ${ASCENT.subtle}`}>
           {deals.length}
         </span>
       </div>
@@ -234,7 +234,7 @@ function StageColumn({
         ref={setNodeRef}
         className={`mt-3 flex flex-1 flex-col gap-2 rounded-lg transition-all ${
           isOver
-            ? "bg-[#7B61FF]/5 outline outline-2 outline-dashed outline-[#7B61FF] outline-offset-2"
+            ? "bg-[#7B61FF]/7 outline outline-2 outline-dashed outline-[#7B61FF] outline-offset-2 shadow-[0_0_0_1px_rgba(123,97,255,0.2),0_16px_30px_rgba(35,22,79,0.22)]"
             : ""
         }`}
       >

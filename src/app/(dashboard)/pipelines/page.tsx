@@ -300,8 +300,12 @@ export default function PipelinesPage() {
 
   if (loading) {
     return (
-      <div className={`-m-4 min-h-[calc(100vh-0px)] p-6 sm:-m-6 sm:p-10 space-y-8 ${ASCENT.canvas}`}>
-        <div className={`flex items-center justify-between p-6 sm:p-7 ${ASCENT.panel}`}>
+      <div className={`relative -m-4 min-h-[calc(100vh-0px)] overflow-hidden p-6 sm:-m-6 sm:p-10 space-y-8 ${ASCENT.canvas}`}>
+        <div className="pointer-events-none absolute inset-0 opacity-80">
+          <div className="absolute -left-20 top-12 h-80 w-80 rounded-full bg-[#7B61FF]/14 blur-3xl" />
+          <div className="absolute -right-24 bottom-12 h-[28rem] w-[28rem] rounded-full bg-[#FF4F8A]/9 blur-3xl" />
+        </div>
+        <div className={`relative flex items-center justify-between rounded-2xl border border-white/10 bg-[linear-gradient(160deg,rgba(13,14,20,0.82),rgba(42,27,77,0.22)_55%,rgba(13,14,20,0.78))] p-6 shadow-[0_18px_48px_rgba(7,8,18,0.38),inset_0_1px_0_rgba(255,255,255,0.08)] backdrop-blur-[8px] sm:p-7 ${ASCENT.panel}`}>
           <div className="h-8 w-48 animate-pulse rounded bg-[var(--ascent-field)]" />
           <div className="h-9 w-28 animate-pulse rounded-lg bg-[var(--ascent-field)]" />
         </div>
@@ -315,14 +319,18 @@ export default function PipelinesPage() {
   }
 
   return (
-    <div className={`-m-4 min-h-[calc(100vh-0px)] p-6 sm:-m-6 sm:p-10 space-y-8 ${ASCENT.canvas}`}>
+    <div className={`relative -m-4 min-h-[calc(100vh-0px)] overflow-hidden p-6 sm:-m-6 sm:p-10 space-y-8 ${ASCENT.canvas}`}>
+      <div className="pointer-events-none absolute inset-0 opacity-80">
+        <div className="absolute -left-20 top-12 h-80 w-80 rounded-full bg-[#7B61FF]/14 blur-3xl" />
+        <div className="absolute -right-24 bottom-12 h-[28rem] w-[28rem] rounded-full bg-[#FF4F8A]/9 blur-3xl" />
+      </div>
       {/* Header */}
-      <div className={`flex flex-wrap items-center justify-between gap-3 p-6 sm:p-7 ${ASCENT.panel}`}>
+      <div className={`relative flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-white/10 bg-[linear-gradient(160deg,rgba(13,14,20,0.82),rgba(42,27,77,0.22)_55%,rgba(13,14,20,0.78))] p-6 shadow-[0_18px_48px_rgba(7,8,18,0.38),inset_0_1px_0_rgba(255,255,255,0.08)] backdrop-blur-[8px] sm:p-7 ${ASCENT.panel}`}>
         <div className="flex items-center gap-3">
           {/* Pipeline selector dropdown */}
           <DropdownMenu>
             <DropdownMenuTrigger
-              className={`inline-flex items-center gap-2 rounded-lg border px-3 py-2 text-sm ${ASCENT.divider} bg-[var(--ascent-panel)] ${ASCENT.title} hover:bg-[var(--ascent-hover)] data-[popup-open]:bg-[var(--ascent-hover)] ${ASCENT_INTERACTIVE}`}
+              className={`inline-flex items-center gap-2 rounded-lg border border-white/12 bg-white/[0.03] px-3 py-2 text-sm shadow-[0_8px_20px_rgba(10,12,24,0.32)] ${ASCENT.divider} ${ASCENT.title} hover:bg-[var(--ascent-hover)] data-[popup-open]:bg-[var(--ascent-hover)] ${ASCENT_INTERACTIVE}`}
             >
               <GitBranch className="h-4 w-4 text-[#7B61FF]" />
               <span className="font-semibold">
@@ -332,7 +340,7 @@ export default function PipelinesPage() {
             </DropdownMenuTrigger>
             <DropdownMenuContent
               align="start"
-              className={`w-64 ${ASCENT.popover}`}
+              className={`w-64 border border-white/12 bg-[linear-gradient(170deg,rgba(19,21,33,0.98),rgba(30,20,56,0.94)_60%,rgba(14,15,24,0.98))] shadow-[0_20px_44px_rgba(6,8,18,0.5)] backdrop-blur-xl ${ASCENT.popover}`}
             >
               {pipelines.length === 0 && (
                 <DropdownMenuItem disabled className={ASCENT.subtle}>

@@ -42,10 +42,10 @@ export function DealCard({ deal, stage, onEdit, isOverlay }: DealCardProps) {
         e.stopPropagation();
         onEdit(deal);
       }}
-      className={`group relative w-full cursor-pointer rounded-xl border pl-4 pr-3 py-3 text-left shadow-sm ${ASCENT.divider} bg-[var(--ascent-card)] ${ASCENT_INTERACTIVE} ${
+      className={`group relative w-full cursor-pointer rounded-xl border border-white/12 bg-[linear-gradient(170deg,rgba(255,255,255,0.05),rgba(255,255,255,0.018)_54%,rgba(255,255,255,0.01))] pl-4 pr-3 py-3 text-left shadow-[0_10px_22px_rgba(8,10,22,0.3)] ${ASCENT.divider} ${ASCENT_INTERACTIVE} ${
         isOverlay
-          ? "shadow-xl"
-          : "hover:-translate-y-0.5 hover:bg-[var(--ascent-hover)] hover:shadow-lg"
+          ? "shadow-[0_20px_40px_rgba(8,10,22,0.42)]"
+          : "hover:-translate-y-0.5 hover:border-[#9f8cff]/35 hover:bg-[linear-gradient(170deg,rgba(123,97,255,0.12),rgba(255,255,255,0.02)_65%)] hover:shadow-[0_16px_32px_rgba(8,10,22,0.38)]"
       }`}
     >
       {/* 4px left accent bar using stage color */}
@@ -75,7 +75,7 @@ export function DealCard({ deal, stage, onEdit, isOverlay }: DealCardProps) {
 
       {/* Contact row */}
       <div className="mt-2 flex items-center gap-2">
-        <span className={`flex h-5 w-5 items-center justify-center rounded-full bg-[var(--ascent-field)] text-[10px] font-semibold ${ASCENT.title}`}>
+        <span className={`flex h-5 w-5 items-center justify-center rounded-full border border-white/12 bg-white/[0.03] text-[10px] font-semibold ${ASCENT.title}`}>
           {initials(deal.contact?.name, deal.contact?.phone)}
         </span>
         <span className={`truncate text-xs ${ASCENT.subtle}`}>{contactLabel}</span>

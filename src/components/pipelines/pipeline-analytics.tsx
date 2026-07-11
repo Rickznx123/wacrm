@@ -96,7 +96,7 @@ export function PipelineAnalytics({ stages, deals }: PipelineAnalyticsProps) {
 
   return (
     <TooltipProvider>
-      <div className={`grid grid-cols-2 gap-3 rounded-xl border bg-[var(--ascent-card)] p-4 sm:grid-cols-3 xl:grid-cols-6 ${ASCENT.divider}`}>
+      <div className={`grid grid-cols-2 gap-3 rounded-2xl border border-white/12 bg-[linear-gradient(170deg,rgba(255,255,255,0.05),rgba(255,255,255,0.016)_56%,rgba(255,255,255,0.01))] p-4 shadow-[0_16px_36px_rgba(7,8,18,0.36)] sm:grid-cols-3 xl:grid-cols-6 ${ASCENT.divider}`}>
         <Metric
           icon={<BarChart3 className={`h-4 w-4 ${ASCENT.subtle}`} />}
           label={t("totalDeals")}
@@ -159,7 +159,7 @@ function Metric({
   t: any;
 }) {
   return (
-    <div className={`rounded-lg bg-[var(--ascent-field)] p-3 ${ASCENT_INTERACTIVE}`}>
+    <div className={`rounded-lg border border-white/10 bg-[linear-gradient(170deg,rgba(123,97,255,0.12),rgba(255,255,255,0.02)_62%,rgba(255,255,255,0.01))] p-3 shadow-[0_10px_22px_rgba(8,10,24,0.3)] ${ASCENT_INTERACTIVE}`}>
       <div className={`flex items-center gap-1.5 text-[10px] font-medium uppercase tracking-wider ${ASCENT.subtle}`}>
         {icon}
         <span>{label}</span>
