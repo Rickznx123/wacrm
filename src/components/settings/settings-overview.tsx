@@ -118,21 +118,42 @@ export function SettingsOverview({
       setCountsLoading(false);
     })();
 
-    // WhatsApp connection status — slower, independent.
+    // WhatsApp connection status — aggregate Meta OR Evolution.
     (async () => {
       setWhatsappLoading(true);
-      const [row, health] = await Promise.allSettled([
+      const [metaRow, evolutionRow, health] = await Promise.allSettled([
         supabase
           .from('whatsapp_config')
-          .select('phone_number_id')
+          .select('phone_number_id, status')
           .eq('account_id', acctId)
+          .maybeSingle(),
+        supabase
+          .from('whatsapp_channels')
+          .select('instance_id, status')
+          .eq('account_id', acctId)
+          .eq('provider', 'evolution')
           .maybeSingle(),
         fetch('/api/whatsapp/config', { cache: 'no-store' }).then((r) => r.json()),
       ]);
       if (cancelled) return;
+
+      const metaConfigured =
+        metaRow.status === 'fulfilled' && !!metaRow.value.data?.phone_number_id;
+      const evolutionConfigured =
+        evolutionRow.status === 'fulfilled' && !!evolutionRow.value.data?.instance_id;
+
+      const metaConnectedByHealth =
+        health.status === 'fulfilled' && !!health.value?.connected;
+      const metaConnectedByRow =
+        metaRow.status === 'fulfilled' &&
+        metaRow.value.data?.status === 'connected';
+      const evolutionConnected =
+        evolutionRow.status === 'fulfilled' &&
+        evolutionRow.value.data?.status === 'connected';
+
       setWhatsapp({
-        configured: row.status === 'fulfilled' && !!row.value.data?.phone_number_id,
-        connected: health.status === 'fulfilled' && !!health.value?.connected,
+        configured: metaConfigured || evolutionConfigured,
+        connected: metaConnectedByHealth || metaConnectedByRow || evolutionConnected,
       });
       setWhatsappLoading(false);
     })();

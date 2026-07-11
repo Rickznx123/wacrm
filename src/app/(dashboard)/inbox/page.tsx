@@ -190,13 +190,23 @@ export default function InboxPage() {
         return;
       }
 
-      const { data } = await supabase
-        .from("whatsapp_config")
-        .select("status")
-        .eq("account_id", accountId)
-        .maybeSingle();
+      const [metaRes, evolutionRes] = await Promise.all([
+        supabase
+          .from("whatsapp_config")
+          .select("status")
+          .eq("account_id", accountId)
+          .maybeSingle(),
+        supabase
+          .from("whatsapp_channels")
+          .select("status")
+          .eq("account_id", accountId)
+          .eq("provider", "evolution")
+          .maybeSingle(),
+      ]);
 
-      setWhatsappConnected(data?.status === "connected");
+      const metaConnected = metaRes.data?.status === "connected";
+      const evolutionConnected = evolutionRes.data?.status === "connected";
+      setWhatsappConnected(metaConnected || evolutionConnected);
     };
 
     checkConnection();
