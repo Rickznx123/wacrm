@@ -552,8 +552,12 @@ export default function InboxPage() {
   const hasActiveConv = !!activeConversation;
 
   return (
-    <div className={`-m-4 sm:-m-6 p-4 sm:p-6 h-[calc(100vh-3.5rem)] ${ASCENT.canvas}`}>
-      <div className={`flex h-full flex-col overflow-hidden ${ASCENT.panel}`}>
+    <div className={`relative -m-4 h-[calc(100vh-3.5rem)] overflow-hidden p-4 sm:-m-6 sm:p-6 ${ASCENT.canvas}`}>
+      <div className="pointer-events-none absolute inset-0 opacity-80">
+        <div className="absolute -left-24 -top-24 h-80 w-80 rounded-full bg-[#7B61FF]/16 blur-3xl" />
+        <div className="absolute -bottom-24 right-0 h-96 w-96 rounded-full bg-[#FF4F8A]/10 blur-3xl" />
+      </div>
+      <div className={`relative flex h-full flex-col overflow-hidden rounded-2xl border border-white/10 bg-[linear-gradient(160deg,rgba(13,14,20,0.84),rgba(42,27,77,0.24)_55%,rgba(13,14,20,0.82))] shadow-[0_20px_60px_rgba(7,8,18,0.45),inset_0_1px_0_rgba(255,255,255,0.08)] backdrop-blur-sm ${ASCENT.panel}`}>
       {/* WhatsApp connection banner — in the flex column, not absolute,
           so it pushes the panels down instead of overlapping them. */}
       {whatsappConnected === false && (

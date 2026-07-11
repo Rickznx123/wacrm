@@ -142,7 +142,7 @@ const STATUS_OPTIONS: { label: string; value: ConversationStatus; color: string 
   { label: "Closed", value: "closed", color: "text-muted-foreground" },
 ];
 
-const THREAD_SURFACE = "bg-[var(--ascent-panel)]";
+const THREAD_SURFACE = "bg-[linear-gradient(180deg,rgba(123,97,255,0.06),rgba(255,255,255,0.015)_26%,rgba(13,14,20,0.42))] backdrop-blur-[6px]";
 
 export function MessageThread({
   conversation,

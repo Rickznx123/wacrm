@@ -226,7 +226,7 @@ export function ConversationList({
     // w-full on mobile so the list occupies the whole viewport when it's
     // the single pane showing; fixed 320px on desktop where it shares the
     // row with the thread + contact sidebar.
-    <div className={`flex h-full w-full flex-col border-r ${ASCENT.divider} bg-[var(--ascent-panel)] lg:w-80`}>
+    <div className={`flex h-full w-full flex-col border-r ${ASCENT.divider} bg-[linear-gradient(180deg,rgba(123,97,255,0.09),rgba(255,255,255,0.01)_22%,rgba(13,14,20,0.36))] shadow-[0_18px_42px_rgba(6,8,18,0.36)] backdrop-blur-[8px] lg:w-80`}>
       {/* Search + Filter */}
       <div className={`space-y-3 border-b p-4 ${ASCENT.divider}`}>
         <div className="relative">
@@ -442,7 +442,7 @@ export function ConversationList({
             <p className="text-sm text-[var(--ascent-subtle)]">{t("noConversations")}</p>
           </div>
         ) : (
-          <div className="flex flex-col gap-1 p-2">
+          <div className="flex flex-col gap-2 p-2.5">
             {filtered.map((conv) => (
               <ConversationItem
                 key={conv.id}
@@ -490,14 +490,14 @@ function ConversationItem({
     <button
       onClick={handleClick}
       className={cn(
-        `flex w-full items-start gap-3 rounded-xl border px-3 py-3.5 text-left bg-[var(--ascent-panel)] hover:bg-[var(--ascent-hover)] ${ASCENT_INTERACTIVE}`,
+        `flex w-full items-start gap-3.5 rounded-2xl border px-3.5 py-3.5 text-left transition-all duration-200 ease-out will-change-transform ${ASCENT_INTERACTIVE}`,
         isActive
-          ? "border-[#7B61FF] bg-[#7B61FF]/8"
-          : "border-[var(--ascent-border)]"
+          ? "border-[#9f8cff]/75 bg-[linear-gradient(175deg,rgba(123,97,255,0.28),rgba(123,97,255,0.08)_55%,rgba(255,255,255,0.02))] shadow-[0_0_0_1px_rgba(123,97,255,0.28),0_18px_36px_rgba(30,20,76,0.42)]"
+          : "border-white/12 bg-[linear-gradient(180deg,rgba(255,255,255,0.045),rgba(255,255,255,0.018)_45%,rgba(255,255,255,0.01))] shadow-[0_12px_28px_rgba(7,8,18,0.34)] hover:-translate-y-0.5 hover:scale-[1.005] hover:border-[#a797ff]/45 hover:shadow-[0_16px_34px_rgba(13,14,28,0.42),0_0_0_1px_rgba(123,97,255,0.16)]"
       )}
     >
       {/* Avatar */}
-      <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-[var(--ascent-field)] text-sm font-medium text-[var(--ascent-title)]">
+      <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-white/15 bg-[linear-gradient(160deg,rgba(123,97,255,0.22),rgba(255,255,255,0.06))] text-sm font-semibold text-[var(--ascent-title)] shadow-[0_8px_18px_rgba(16,18,38,0.35)]">
         {contact?.avatar_url ? (
           <img
             src={contact.avatar_url}
@@ -512,18 +512,18 @@ function ConversationItem({
       {/* Content */}
       <div className="min-w-0 flex-1">
         <div className="flex items-center justify-between gap-2">
-          <span className="truncate text-sm font-medium text-[var(--ascent-title)]">
+          <span className="truncate text-[13.5px] font-semibold tracking-[0.01em] text-[var(--ascent-title)]">
             {displayName}
           </span>
-          <span className="shrink-0 text-[10px] text-[var(--ascent-subtle)]">{timeAgo}</span>
+          <span className="shrink-0 text-[10.5px] font-medium text-[var(--ascent-subtle)]">{timeAgo}</span>
         </div>
-        <div className="mt-0.5 flex items-center justify-between gap-2">
-          <p className="truncate text-xs text-[var(--ascent-subtle)]">
+        <div className="mt-1 flex items-center justify-between gap-2">
+          <p className="truncate text-[12.5px] font-medium text-[var(--ascent-subtle)]/95">
             {conversation.last_message_text || t("noMessagesYet")}
           </p>
           <div className="flex shrink-0 items-center gap-1.5">
             {conversation.unread_count > 0 && (
-              <span className="flex h-4 min-w-4 items-center justify-center rounded-full bg-[#FF4F8A] px-1 text-[10px] font-bold text-white">
+              <span className="flex h-4 min-w-4 items-center justify-center rounded-full bg-[#FF4F8A] px-1 text-[10px] font-bold text-white shadow-[0_8px_18px_rgba(255,79,138,0.45)]">
                 {conversation.unread_count}
               </span>
             )}
