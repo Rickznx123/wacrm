@@ -105,6 +105,25 @@ function asArray(value: unknown): unknown[] {
   return Array.isArray(value) ? value : []
 }
 
+function listObjectKeys(value: unknown): string[] {
+  if (!value || typeof value !== 'object' || Array.isArray(value)) return []
+  return Object.keys(value as Record<string, unknown>).sort((a, b) => a.localeCompare(b))
+}
+
+function listNestedObjectKeys(value: unknown): Record<string, string[]> {
+  const obj = asObject(value)
+  const out: Record<string, string[]> = {}
+  for (const [key, nested] of Object.entries(obj)) {
+    if (!nested || typeof nested !== 'object' || Array.isArray(nested)) continue
+    const nestedKeys = Object.keys(nested as Record<string, unknown>)
+      .sort((a, b) => a.localeCompare(b))
+    if (nestedKeys.length > 0) {
+      out[key] = nestedKeys
+    }
+  }
+  return out
+}
+
 function getErrorCode(error: unknown): string | null {
   if (!error || typeof error !== 'object') return null
   const code = (error as { code?: unknown }).code
@@ -411,6 +430,47 @@ function parseInboundMessages(body: Record<string, unknown>): ParsedInboundMessa
   }
 
   return []
+}
+
+function logInboundMediaShape(
+  root: Record<string, unknown>,
+  logCtx: WebhookLogContext,
+) {
+  const sources = [asArray(asObject(root.data).messages), asArray(root.messages)]
+
+  for (const source of sources) {
+    for (const item of source) {
+      const row = asObject(item)
+      const msg = asObject(row.message)
+      if (Object.keys(msg).length === 0) continue
+
+      const mediaTypes: Array<{ type: 'image' | 'video' | 'audio' | 'document'; key: string }> = [
+        { type: 'image', key: 'imageMessage' },
+        { type: 'video', key: 'videoMessage' },
+        { type: 'audio', key: 'audioMessage' },
+        { type: 'document', key: 'documentMessage' },
+      ]
+
+      for (const mediaType of mediaTypes) {
+        const mediaObj = asObject(msg[mediaType.key])
+        if (Object.keys(mediaObj).length === 0) continue
+
+        const key = asObject(row.key)
+        logStructured('info', 'media.payload_shape', {
+          ...logCtx,
+          messageId: asString(key.id) || asString(row.id) || null,
+          mediaType: mediaType.type,
+          messageKeys: listObjectKeys(msg),
+          mediaKeys: listObjectKeys(mediaObj),
+          mediaNestedObjectKeys: listNestedObjectKeys(mediaObj),
+          hasLikelyBase64Field:
+            typeof mediaObj.base64 === 'string' ||
+            typeof mediaObj.data === 'string' ||
+            typeof mediaObj.media === 'string',
+        })
+      }
+    }
+  }
 }
 
 function parseStatusUpdates(body: Record<string, unknown>): Array<{ messageId: string; status: EvolutionStatus }> {
@@ -819,6 +879,10 @@ export async function POST(request: Request) {
     }
 
     let hasTransientError = false
+
+    // Temporary diagnostics: log only key names from inbound media objects
+    // to confirm where Evolution sends base64 fields.
+    logInboundMediaShape(root, logCtx)
 
     const inbound = parseInboundMessages(root)
     for (const msg of inbound) {
