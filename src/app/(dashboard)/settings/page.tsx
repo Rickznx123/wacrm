@@ -19,7 +19,7 @@ import { DealsSettings } from '@/components/settings/deals-settings';
 import { MembersTab } from '@/components/settings/members-tab';
 import { ApiKeysSettings } from '@/components/settings/api-keys-settings';
 import { AiConfig } from '@/components/settings/ai-config';
-import { IntegrationsPlaceholder } from '@/components/settings/integrations-placeholder';
+import { MetaCapiConfig } from '@/components/settings/meta-capi-config';
 import {
   resolveSection,
   type SettingsSection,
@@ -63,7 +63,7 @@ export default function SettingsPage() {
     appearance: <AppearancePanel />,
     ai: <AiConfig />,
     channels: <WhatsAppChannelsConfig />,
-    integrations: <IntegrationsPlaceholder />,
+    integrations: <MetaCapiConfig />,
     templates: <TemplateManager />,
     'quick-replies': <QuickRepliesManager />,
     fields: <FieldsAndTagsPanel />,
