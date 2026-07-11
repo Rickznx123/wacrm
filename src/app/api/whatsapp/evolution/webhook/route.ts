@@ -436,40 +436,49 @@ function logInboundMediaShape(
   root: Record<string, unknown>,
   logCtx: WebhookLogContext,
 ) {
-  const sources = [asArray(asObject(root.data).messages), asArray(root.messages)]
+  const data = asObject(root.data)
+  const candidates: Array<{ source: string; index: number; row: Record<string, unknown> }> = []
 
-  for (const source of sources) {
-    for (const item of source) {
-      const row = asObject(item)
-      const msg = asObject(row.message)
-      if (Object.keys(msg).length === 0) continue
+  for (const [index, item] of asArray(data.messages).entries()) {
+    candidates.push({ source: 'data.messages', index, row: asObject(item) })
+  }
+  for (const [index, item] of asArray(root.messages).entries()) {
+    candidates.push({ source: 'root.messages', index, row: asObject(item) })
+  }
+  if (Object.keys(asObject(data.message)).length > 0) {
+    candidates.push({ source: 'data.message', index: 0, row: data })
+  }
+  if (Object.keys(asObject(root.message)).length > 0) {
+    candidates.push({ source: 'root.message', index: 0, row: root })
+  }
 
-      const mediaTypes: Array<{ type: 'image' | 'video' | 'audio' | 'document'; key: string }> = [
-        { type: 'image', key: 'imageMessage' },
-        { type: 'video', key: 'videoMessage' },
-        { type: 'audio', key: 'audioMessage' },
-        { type: 'document', key: 'documentMessage' },
-      ]
+  for (const candidate of candidates) {
+    const row = candidate.row
+    const key = asObject(row.key)
+    const msg = asObject(row.message)
+    const detectedMediaKinds = ['imageMessage', 'videoMessage', 'audioMessage', 'documentMessage']
+      .filter((kind) => Object.keys(asObject(msg[kind])).length > 0)
+      .map((kind) => kind.replace('Message', ''))
+    const hasLikelyBase64Field = Object.values(msg).some((part) => {
+      const partObj = asObject(part)
+      return (
+        typeof partObj.base64 === 'string' ||
+        typeof partObj.data === 'string' ||
+        typeof partObj.media === 'string'
+      )
+    })
 
-      for (const mediaType of mediaTypes) {
-        const mediaObj = asObject(msg[mediaType.key])
-        if (Object.keys(mediaObj).length === 0) continue
-
-        const key = asObject(row.key)
-        logStructured('info', 'media.payload_shape', {
-          ...logCtx,
-          messageId: asString(key.id) || asString(row.id) || null,
-          mediaType: mediaType.type,
-          messageKeys: listObjectKeys(msg),
-          mediaKeys: listObjectKeys(mediaObj),
-          mediaNestedObjectKeys: listNestedObjectKeys(mediaObj),
-          hasLikelyBase64Field:
-            typeof mediaObj.base64 === 'string' ||
-            typeof mediaObj.data === 'string' ||
-            typeof mediaObj.media === 'string',
-        })
-      }
-    }
+    logStructured('info', 'media.payload_shape', {
+      ...logCtx,
+      source: candidate.source,
+      sourceIndex: candidate.index,
+      messageId: asString(key.id) || asString(row.id) || null,
+      rowKeys: listObjectKeys(row),
+      messageTopLevelKeys: listObjectKeys(msg),
+      messageNestedObjectKeys: listNestedObjectKeys(msg),
+      detectedMediaKinds,
+      hasLikelyBase64Field,
+    })
   }
 }
 
@@ -881,8 +890,8 @@ export async function POST(request: Request) {
 
     let hasTransientError = false
 
-    // Temporary diagnostics: log only key names from inbound media objects
-    // to confirm where Evolution sends base64 fields.
+    // Temporary diagnostics: log inbound message payload shape for all supported
+    // envelope formats (arrays and single-message objects).
     logInboundMediaShape(root, logCtx)
 
     const inbound = parseInboundMessages(root)
