@@ -18,8 +18,8 @@ import { useTranslations } from 'next-intl'
 export function PipelineDonut({ data, loading, currency }: PipelineDonutProps) {
   const t = useTranslations('Dashboard.pipelineDonut')
   return (
-    <section className="flex h-full flex-col rounded-xl border border-border bg-card">
-      <header className="border-b border-border px-5 py-4">
+    <section className="flex h-full flex-col rounded-2xl border border-white/12 bg-[linear-gradient(170deg,rgba(255,255,255,0.05),rgba(255,255,255,0.018)_55%,rgba(255,255,255,0.01))] shadow-[0_14px_34px_rgba(7,8,18,0.34)]">
+      <header className="border-b border-white/10 bg-[linear-gradient(180deg,rgba(123,97,255,0.12),rgba(255,255,255,0.02)_60%,transparent)] px-5 py-4">
         <h2 className="text-sm font-semibold text-foreground">{t('title')}</h2>
         <p className="mt-0.5 text-xs text-muted-foreground">
           {t('description')}

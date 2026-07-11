@@ -24,10 +24,10 @@ interface MetricCardProps {
 
 export function MetricCard({ title, value, icon: Icon, delta, subtitle }: MetricCardProps) {
   return (
-    <div className={`rounded-xl border p-5 ${ASCENT.divider} bg-[var(--ascent-card)]`}>
+    <div className={`rounded-2xl border border-white/12 bg-[linear-gradient(175deg,rgba(255,255,255,0.05),rgba(255,255,255,0.018)_52%,rgba(255,255,255,0.01))] p-5 shadow-[0_14px_34px_rgba(7,8,18,0.34)] transition-all duration-200 hover:-translate-y-0.5 hover:border-[#9f8cff]/35 hover:shadow-[0_18px_38px_rgba(12,14,28,0.4),0_0_0_1px_rgba(123,97,255,0.12)] ${ASCENT.divider}`}>
       <div className="flex items-start justify-between">
         <p className={`text-sm font-medium ${ASCENT.subtle}`}>{title}</p>
-        <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-[var(--ascent-field)] text-[var(--ascent-subtle)]">
+        <div className="flex h-8 w-8 items-center justify-center rounded-lg border border-white/12 bg-[linear-gradient(150deg,rgba(123,97,255,0.2),rgba(255,255,255,0.05))] text-[var(--ascent-subtle)] shadow-[0_8px_18px_rgba(12,14,28,0.3)]">
           <Icon className="h-4 w-4" />
         </div>
       </div>

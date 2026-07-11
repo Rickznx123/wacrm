@@ -36,9 +36,9 @@ export function QuickActions() {
           <Link
             key={a.href}
             href={a.href}
-            className={`group flex items-center gap-3 rounded-xl border px-4 py-3 ${ASCENT.divider} bg-[var(--ascent-card)] hover:bg-[var(--ascent-hover)] ${ASCENT_INTERACTIVE}`}
+            className={`group flex items-center gap-3 rounded-2xl border border-white/12 bg-[linear-gradient(170deg,rgba(255,255,255,0.05),rgba(255,255,255,0.018)_52%,rgba(255,255,255,0.01))] px-4 py-3 shadow-[0_12px_28px_rgba(7,8,18,0.3)] transition-all duration-200 hover:-translate-y-0.5 hover:border-[#9f8cff]/35 hover:bg-[linear-gradient(170deg,rgba(123,97,255,0.12),rgba(255,255,255,0.02)_65%)] hover:shadow-[0_18px_38px_rgba(12,14,28,0.38)] ${ASCENT.divider} ${ASCENT_INTERACTIVE}`}
           >
-            <div className={`flex h-9 w-9 items-center justify-center rounded-lg bg-[var(--ascent-field)] ${a.tint}`}>
+            <div className={`flex h-9 w-9 items-center justify-center rounded-lg border border-white/12 bg-[linear-gradient(150deg,rgba(123,97,255,0.2),rgba(255,255,255,0.05))] shadow-[0_8px_18px_rgba(12,14,28,0.3)] ${a.tint}`}>
               <Icon className="h-4 w-4" />
             </div>
             <span className={`text-sm font-medium ${ASCENT.title}`}>{t(a.labelKey as string)}</span>

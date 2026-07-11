@@ -58,8 +58,8 @@ export function ActivityFeed({ items, loading }: ActivityFeedProps) {
     i === 0 || totalLoaded > PAGE_SIZES[i - 1]
 
   return (
-    <section className={`rounded-xl border bg-[var(--ascent-card)] ${ASCENT.divider}`}>
-      <header className={`flex items-center justify-between border-b px-5 py-4 ${ASCENT.divider}`}>
+    <section className={`rounded-2xl border border-white/12 bg-[linear-gradient(170deg,rgba(255,255,255,0.05),rgba(255,255,255,0.018)_55%,rgba(255,255,255,0.01))] shadow-[0_14px_34px_rgba(7,8,18,0.34)] ${ASCENT.divider}`}>
+      <header className={`flex items-center justify-between border-b border-white/10 bg-[linear-gradient(180deg,rgba(123,97,255,0.12),rgba(255,255,255,0.02)_60%,transparent)] px-5 py-4 ${ASCENT.divider}`}>
         <h2 className={`text-sm font-semibold ${ASCENT.title}`}>{t('title')}</h2>
         <Link
           href="/inbox"
@@ -124,7 +124,7 @@ export function ActivityFeed({ items, loading }: ActivityFeedProps) {
               )
             })}
           </ul>
-          <footer className={`flex items-center justify-between border-t px-5 py-3 text-xs ${ASCENT.divider}`}>
+          <footer className={`flex items-center justify-between border-t border-white/10 px-5 py-3 text-xs ${ASCENT.divider}`}>
             <span className={`tabular-nums ${ASCENT.subtle}`}>
               {t('showingOf', { visible: visible.length, totalLoaded, plus: totalLoaded === 50 ? '+' : '' })}
             </span>

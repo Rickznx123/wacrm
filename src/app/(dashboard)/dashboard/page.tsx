@@ -123,9 +123,13 @@ export default function DashboardPage() {
   )
 
   return (
-    <div className={`-m-4 min-h-[calc(100vh-0px)] p-6 sm:-m-6 sm:p-10 space-y-8 ${ASCENT.canvas}`}>
+    <div className={`relative -m-4 min-h-[calc(100vh-0px)] overflow-hidden p-6 sm:-m-6 sm:p-10 space-y-8 ${ASCENT.canvas}`}>
+      <div className="pointer-events-none absolute inset-0 opacity-80">
+        <div className="absolute -left-20 top-10 h-80 w-80 rounded-full bg-[#7B61FF]/14 blur-3xl" />
+        <div className="absolute -right-24 bottom-10 h-[28rem] w-[28rem] rounded-full bg-[#FF4F8A]/8 blur-3xl" />
+      </div>
       {/* Header */}
-      <div className={`p-6 sm:p-7 ${ASCENT.panel}`}>
+      <div className={`relative rounded-2xl border border-white/10 bg-[linear-gradient(160deg,rgba(13,14,20,0.8),rgba(42,27,77,0.22)_55%,rgba(13,14,20,0.78))] p-6 shadow-[0_18px_48px_rgba(7,8,18,0.38),inset_0_1px_0_rgba(255,255,255,0.08)] backdrop-blur-[8px] sm:p-7 ${ASCENT.panel}`}>
         <h1 className={`text-3xl font-bold tracking-tight ${ASCENT.title}`}>{t('title')}</h1>
         <p className={`mt-2 text-sm font-normal ${ASCENT.subtle}`}>{t('description')}</p>
       </div>

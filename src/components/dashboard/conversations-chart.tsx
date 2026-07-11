@@ -49,13 +49,13 @@ export function ConversationsChart({ series, loading, range, onRangeChange }: Co
   }, [data])
 
   return (
-    <section className="flex h-full flex-col rounded-xl border border-border bg-card">
-      <header className="flex items-center justify-between border-b border-border px-5 py-4">
+    <section className="flex h-full flex-col rounded-2xl border border-white/12 bg-[linear-gradient(170deg,rgba(255,255,255,0.05),rgba(255,255,255,0.018)_55%,rgba(255,255,255,0.01))] shadow-[0_14px_34px_rgba(7,8,18,0.34)]">
+      <header className="flex items-center justify-between border-b border-white/10 bg-[linear-gradient(180deg,rgba(123,97,255,0.12),rgba(255,255,255,0.02)_60%,transparent)] px-5 py-4">
         <div>
           <h2 className="text-sm font-semibold text-foreground">{t('title')}</h2>
           <p className="mt-0.5 text-xs text-muted-foreground">{t('description')}</p>
         </div>
-        <div className="flex items-center gap-1 rounded-lg bg-muted/60 p-1">
+        <div className="flex items-center gap-1 rounded-lg border border-white/12 bg-white/[0.03] p-1 backdrop-blur">
           {[7, 30, 90].map((r) => (
             <button
               key={r}
@@ -64,8 +64,8 @@ export function ConversationsChart({ series, loading, range, onRangeChange }: Co
               className={cn(
                 'rounded-md px-2.5 py-1 text-xs font-medium transition-colors',
                 range === r
-                  ? 'bg-secondary text-secondary-foreground'
-                  : 'text-muted-foreground hover:text-foreground',
+                  ? 'bg-[#7B61FF]/85 text-white shadow-[0_8px_18px_rgba(86,66,190,0.42)]'
+                  : 'text-muted-foreground hover:bg-[#7B61FF]/10 hover:text-foreground',
               )}
             >
               {t('days', { count: r })}
@@ -88,7 +88,7 @@ export function ConversationsChart({ series, loading, range, onRangeChange }: Co
         )}
       </div>
 
-      <footer className="flex items-center gap-4 border-t border-border px-5 py-3 text-xs text-muted-foreground">
+      <footer className="flex items-center gap-4 border-t border-white/10 px-5 py-3 text-xs text-muted-foreground">
         <LegendDot color="#3b82f6" label={t('incoming')} />
         <LegendDot color="#7c3aed" label={t('outgoing')} />
       </footer>
