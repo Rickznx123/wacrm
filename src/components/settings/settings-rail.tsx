@@ -51,9 +51,9 @@ export function SettingsRail({
     <nav
       aria-label="Settings sections"
       className={cn(
-        'flex gap-1 overflow-x-auto pb-2 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden',
+        'flex gap-1 overflow-x-auto rounded-xl border border-white/10 bg-white/[0.02] p-1.5 pb-2 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden',
         `border-b ${ASCENT.divider}`,
-        'lg:sticky lg:top-0 lg:flex-col lg:overflow-visible lg:border-b-0 lg:pb-0',
+        'lg:sticky lg:top-0 lg:flex-col lg:overflow-visible lg:border-b-0 lg:bg-transparent lg:p-0 lg:pb-0',
       )}
     >
       {RAIL_GROUPS.map(({ label, group }) => {
@@ -85,7 +85,7 @@ export function SettingsRail({
                     `flex shrink-0 items-center gap-2.5 rounded-lg border border-transparent px-3 py-2 text-left text-sm font-medium whitespace-nowrap ${ASCENT_INTERACTIVE}`,
                     'lg:w-full',
                     isActive
-                      ? 'bg-[#7B61FF]/12 text-[#7B61FF] border-[#7B61FF]'
+                      ? 'border-[#7B61FF]/55 bg-[linear-gradient(135deg,rgba(123,97,255,0.2),rgba(123,97,255,0.06))] text-[#B4A2FF] shadow-[0_10px_20px_rgba(48,35,118,0.28)]'
                       : `border-transparent ${ASCENT.subtle} hover:bg-[var(--ascent-hover)] hover:text-[var(--ascent-title)]`,
                   )}
                 >

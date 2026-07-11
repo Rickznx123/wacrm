@@ -223,7 +223,7 @@ export function SettingsOverview({
   return (
     <section className="animate-in fade-in-50 duration-200">
       {/* Identity */}
-      <Card className={`flex-row items-center gap-4 px-5 py-5 ${ASCENT.divider} bg-[var(--ascent-card)]`}>
+      <Card className={`flex-row items-center gap-4 rounded-2xl border border-white/12 bg-[linear-gradient(170deg,rgba(255,255,255,0.05),rgba(255,255,255,0.018)_54%,rgba(255,255,255,0.01))] px-5 py-5 shadow-[0_14px_34px_rgba(7,8,18,0.34)] ${ASCENT.divider}`}>
         <Avatar size="lg" className="size-14">
           {profile?.avatar_url ? (
             <AvatarImage src={profile.avatar_url} alt={displayName} />
@@ -261,10 +261,10 @@ export function SettingsOverview({
               type="button"
               onClick={() => onSelect(section)}
               className={cn(
-                `group flex items-start gap-3.5 rounded-xl border bg-[var(--ascent-card)] p-4 text-left hover:bg-[var(--ascent-hover)] ${ASCENT.divider} ${ASCENT_INTERACTIVE}`,
+                `group flex items-start gap-3.5 rounded-2xl border border-white/12 bg-[linear-gradient(170deg,rgba(255,255,255,0.05),rgba(255,255,255,0.018)_54%,rgba(255,255,255,0.01))] p-4 text-left shadow-[0_12px_28px_rgba(7,8,18,0.32)] hover:-translate-y-0.5 hover:border-[#9f8cff]/35 hover:bg-[linear-gradient(170deg,rgba(123,97,255,0.12),rgba(255,255,255,0.02)_65%)] hover:shadow-[0_18px_38px_rgba(12,14,28,0.38)] ${ASCENT.divider} ${ASCENT_INTERACTIVE}`,
               )}
             >
-              <span className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-[#7B61FF]/10 text-[#7B61FF]">
+              <span className="flex size-9 shrink-0 items-center justify-center rounded-lg border border-white/12 bg-[linear-gradient(150deg,rgba(123,97,255,0.2),rgba(255,255,255,0.05))] text-[#7B61FF] shadow-[0_8px_18px_rgba(12,14,28,0.3)]">
                 <Icon className="size-4" />
               </span>
               <span className="min-w-0 flex-1">
