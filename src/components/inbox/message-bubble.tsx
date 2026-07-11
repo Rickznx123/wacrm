@@ -275,16 +275,16 @@ export function MessageBubble({
   return (
     <div
       className={cn(
-        "flex flex-col",
+        "flex flex-col transition-transform duration-200 ease-out",
         isAgent ? "items-end" : "items-start",
       )}
     >
       <div
         className={cn(
-          "relative rounded-2xl px-3 py-2",
+          "relative rounded-2xl border px-3 py-2 shadow-[0_10px_24px_rgba(8,10,20,0.3)] backdrop-blur-[6px]",
           isAgent
-            ? "rounded-br-md bg-primary text-primary-foreground"
-            : "rounded-bl-md bg-muted text-foreground",
+            ? "rounded-br-md border-[#b8adff]/40 bg-[linear-gradient(155deg,rgba(123,97,255,0.92),rgba(92,74,198,0.88)_65%,rgba(74,58,158,0.95))] text-primary-foreground"
+            : "rounded-bl-md border-white/12 bg-[linear-gradient(170deg,rgba(255,255,255,0.06),rgba(255,255,255,0.02)_65%,rgba(255,255,255,0.01))] text-foreground",
         )}
       >
         {reply && (

@@ -869,7 +869,7 @@ export function MessageThread({
     // root shrink lets the bubbles' break-words / max-w caps apply.
     // Issue #257.
     <div className={cn("flex min-w-0 flex-1 flex-col", THREAD_SURFACE)}>
-      <div className={`flex items-center justify-between gap-2 border-b px-3 py-3 sm:px-4 ${ASCENT.divider}`}>
+      <div className={`flex items-center justify-between gap-2 border-b px-3 py-3 sm:px-4 ${ASCENT.divider} bg-[linear-gradient(180deg,rgba(123,97,255,0.12),rgba(255,255,255,0.02)_55%,transparent)] backdrop-blur-[8px]`}>
         <div className="flex min-w-0 items-center gap-2 sm:gap-3">
           {/* Back-to-list button — mobile only. Hidden on lg+ where the
               conversation list is always visible next to the thread. */}
@@ -883,11 +883,11 @@ export function MessageThread({
               <ArrowLeft className="h-5 w-5" />
             </button>
           )}
-          <div className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full bg-[var(--ascent-field)] text-sm font-medium text-[var(--ascent-title)]">
+          <div className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full border border-white/15 bg-[linear-gradient(150deg,rgba(123,97,255,0.26),rgba(255,255,255,0.08))] text-sm font-semibold text-[var(--ascent-title)] shadow-[0_8px_18px_rgba(14,16,36,0.34)]">
             {displayName.charAt(0).toUpperCase()}
           </div>
           <div className="min-w-0">
-            <h2 className="truncate text-sm font-semibold text-[var(--ascent-title)]">{displayName}</h2>
+            <h2 className="truncate text-[14px] font-semibold tracking-[0.01em] text-[var(--ascent-title)]">{displayName}</h2>
             <p className="truncate text-xs text-[var(--ascent-subtle)]">{contact.phone}</p>
           </div>
           {/* Session timer badge — hidden on the narrowest phones so
@@ -957,7 +957,7 @@ export function MessageThread({
           {/* Status dropdown */}
           <DropdownMenu>
             <DropdownMenuTrigger className={cn(
-                  "inline-flex items-center justify-center h-7 gap-1 px-2 text-xs rounded-md hover:bg-muted",
+              "inline-flex items-center justify-center h-7 gap-1 rounded-lg border border-white/12 bg-white/[0.03] px-2 text-xs hover:border-[#9f8cff]/40 hover:bg-[#7B61FF]/10",
                   currentStatus?.color ?? "text-muted-foreground"
                 )}>
                 {currentStatus ? t(`status${currentStatus.label}`) : t("status")}
@@ -965,7 +965,7 @@ export function MessageThread({
             </DropdownMenuTrigger>
             <DropdownMenuContent
               align="end"
-              className="border-border bg-popover"
+              className="border-white/15 bg-[rgba(20,18,34,0.95)] backdrop-blur"
             >
               {STATUS_OPTIONS.map((opt) => (
                 <DropdownMenuItem
@@ -983,7 +983,7 @@ export function MessageThread({
           <DropdownMenu>
             <DropdownMenuTrigger
               className={cn(
-                "inline-flex items-center justify-center h-7 gap-1 px-2 text-xs rounded-md hover:bg-muted",
+                "inline-flex h-7 items-center justify-center gap-1 rounded-lg border border-white/12 bg-white/[0.03] px-2 text-xs hover:border-[#9f8cff]/40 hover:bg-[#7B61FF]/10",
                 assignedAgentId ? "text-primary" : "text-muted-foreground"
               )}
             >
@@ -993,7 +993,7 @@ export function MessageThread({
             </DropdownMenuTrigger>
             <DropdownMenuContent
               align="end"
-              className="border-border bg-popover"
+              className="border-white/15 bg-[rgba(20,18,34,0.95)] backdrop-blur"
             >
               {profiles.length === 0 ? (
                 <DropdownMenuItem disabled className="text-sm text-muted-foreground">
@@ -1047,7 +1047,7 @@ export function MessageThread({
       </div>
 
       {/* Messages Area */}
-      <div ref={scrollRef} className="flex-1 overflow-y-auto bg-[var(--ascent-canvas)] px-4 py-4">
+      <div ref={scrollRef} className="flex-1 overflow-y-auto bg-[radial-gradient(120%_90%_at_50%_-10%,rgba(123,97,255,0.14),transparent_50%),linear-gradient(180deg,rgba(255,255,255,0.02),rgba(13,14,20,0.2))] px-4 py-4">
         {loading ? (
           <div className="flex items-center justify-center py-12">
             <div className="h-5 w-5 animate-spin rounded-full border-2 border-primary border-t-transparent" />
@@ -1065,7 +1065,7 @@ export function MessageThread({
               <div key={group.date}>
                 {/* Date separator */}
                 <div className="mb-4 flex items-center justify-center">
-                  <span className="rounded-full bg-muted px-3 py-1 text-[10px] font-medium text-muted-foreground">
+                  <span className="rounded-full border border-white/12 bg-white/[0.03] px-3 py-1 text-[10px] font-medium text-muted-foreground shadow-[0_8px_18px_rgba(8,10,20,0.28)] backdrop-blur">
                     {formatDateSeparator(group.date, t)}
                   </span>
                 </div>

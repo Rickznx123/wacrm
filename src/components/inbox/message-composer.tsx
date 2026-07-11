@@ -536,7 +536,7 @@ export function MessageComposer({
   // ---- Render --------------------------------------------------------
 
   return (
-    <div className="border-t border-border bg-card p-3">
+    <div className="border-t border-white/10 bg-[linear-gradient(180deg,rgba(123,97,255,0.08),rgba(13,14,20,0.18)_58%)] p-3 backdrop-blur-[8px]">
       {replyTo && (
         <div className="mb-2">
           <ReplyQuote
@@ -547,7 +547,7 @@ export function MessageComposer({
         </div>
       )}
       {sessionExpired && (
-        <div className="mb-2 flex items-center justify-between rounded-lg bg-amber-500/10 px-3 py-2">
+        <div className="mb-2 flex items-center justify-between rounded-lg border border-amber-400/25 bg-amber-500/10 px-3 py-2 shadow-[0_10px_24px_rgba(64,44,8,0.25)]">
           <p className="text-xs text-amber-400">
             {t("sessionExpiredHint")}
           </p>
@@ -607,7 +607,7 @@ export function MessageComposer({
         />
       ) : recording ? (
         // Recording bar — replaces the composer while the mic is live.
-        <div className="flex items-center gap-3 rounded-xl border border-border bg-muted px-4 py-2.5">
+        <div className="flex items-center gap-3 rounded-xl border border-white/12 bg-[linear-gradient(170deg,rgba(255,255,255,0.05),rgba(255,255,255,0.02))] px-4 py-2.5 shadow-[0_12px_26px_rgba(8,10,20,0.3)]">
           <span className="flex h-2.5 w-2.5 shrink-0 animate-pulse rounded-full bg-red-500" />
           <span className="flex-1 text-sm text-foreground">
             {t("recording", { current: formatDuration(recordSeconds), max: formatDuration(MAX_RECORDING_SECONDS) })}
@@ -641,7 +641,7 @@ export function MessageComposer({
                     ? undefined
                     : t("attachMedia")
               }
-              className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-md p-0 text-muted-foreground hover:text-foreground disabled:cursor-not-allowed disabled:opacity-50"
+              className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-white/10 bg-white/[0.02] p-0 text-muted-foreground transition-all duration-200 hover:border-[#9f8cff]/40 hover:bg-[#7B61FF]/10 hover:text-foreground disabled:cursor-not-allowed disabled:opacity-50"
             >
               {busy ? (
                 <Loader2 className="h-4 w-4 animate-spin" />
@@ -649,7 +649,7 @@ export function MessageComposer({
                 <Paperclip className="h-4 w-4" />
               )}
             </DropdownMenuTrigger>
-            <DropdownMenuContent align="start" className="border-border bg-popover">
+            <DropdownMenuContent align="start" className="border-white/15 bg-[rgba(20,18,34,0.95)] backdrop-blur">
               <DropdownMenuItem onClick={() => imageInputRef.current?.click()}>
                 <ImageIcon className="mr-2 h-4 w-4" />
                 {t("photo")}
@@ -681,11 +681,11 @@ export function MessageComposer({
                     ? undefined
                     : t("moreActions")
               }
-              className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-md p-0 text-muted-foreground hover:text-foreground disabled:cursor-not-allowed disabled:opacity-50"
+              className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-white/10 bg-white/[0.02] p-0 text-muted-foreground transition-all duration-200 hover:border-[#9f8cff]/40 hover:bg-[#7B61FF]/10 hover:text-foreground disabled:cursor-not-allowed disabled:opacity-50"
             >
               <Plus className="h-4 w-4" />
             </DropdownMenuTrigger>
-            <DropdownMenuContent align="start" className="border-border bg-popover">
+            <DropdownMenuContent align="start" className="border-white/15 bg-[rgba(20,18,34,0.95)] backdrop-blur">
               <DropdownMenuItem onClick={() => openInteractiveBuilder()}>
                 <MessageSquareDashed className="mr-2 h-4 w-4" />
                 {t("interactiveMessage")}
@@ -703,7 +703,7 @@ export function MessageComposer({
             canAct={!readOnly}
             gateReason="send messages"
             title={readOnly ? undefined : t("sendTemplate")}
-            className="h-9 w-9 shrink-0 p-0 text-muted-foreground hover:text-foreground"
+            className="h-9 w-9 shrink-0 rounded-lg border border-white/10 bg-white/[0.02] p-0 text-muted-foreground transition-all duration-200 hover:border-[#9f8cff]/40 hover:bg-[#7B61FF]/10 hover:text-foreground"
             onClick={onOpenTemplates}
           >
             <LayoutTemplate className="h-4 w-4" />
@@ -716,7 +716,7 @@ export function MessageComposer({
             gateReason="send messages"
             disabled={drafting}
             title={readOnly ? undefined : t("draftWithAI")}
-            className="h-9 w-9 shrink-0 p-0 text-muted-foreground hover:text-primary"
+            className="h-9 w-9 shrink-0 rounded-lg border border-white/10 bg-white/[0.02] p-0 text-muted-foreground transition-all duration-200 hover:border-[#9f8cff]/40 hover:bg-[#7B61FF]/10 hover:text-primary"
             onClick={handleDraft}
           >
             {drafting ? (
@@ -745,7 +745,7 @@ export function MessageComposer({
             // The placeholder text also surfaces the read-only state.
             title={readOnly ? t("readOnlyTitle") : undefined}
             className={cn(
-              "flex-1 resize-none rounded-xl border border-border bg-muted px-4 py-2.5 text-sm text-foreground placeholder-muted-foreground outline-none transition-colors focus:border-primary/50",
+              "flex-1 resize-none rounded-xl border border-white/12 bg-[linear-gradient(170deg,rgba(255,255,255,0.06),rgba(255,255,255,0.02))] px-4 py-2.5 text-sm text-foreground placeholder-muted-foreground/90 outline-none transition-all duration-200 focus:border-primary/50 focus:shadow-[0_0_0_1px_rgba(123,97,255,0.25),0_12px_24px_rgba(14,16,34,0.24)]",
               (sessionExpired || readOnly) && "cursor-not-allowed opacity-50"
             )}
           />
@@ -756,7 +756,7 @@ export function MessageComposer({
             gateReason="send messages"
             disabled={!text.trim() || sessionExpired || sending}
             onClick={handleSend}
-            className="h-9 w-9 shrink-0 bg-primary p-0 hover:bg-primary/90 disabled:opacity-40"
+            className="h-9 w-9 shrink-0 bg-primary p-0 shadow-[0_10px_22px_rgba(93,74,199,0.45)] transition-all duration-200 hover:scale-[1.03] hover:bg-primary/90 disabled:opacity-40"
           >
             <Send className="h-4 w-4" />
           </GatedButton>
@@ -839,7 +839,7 @@ function MediaDraftPreview({
   t: ReturnType<typeof useTranslations>;
 }) {
   return (
-    <div className="rounded-xl border border-border bg-muted/40 p-3">
+    <div className="rounded-xl border border-white/12 bg-[linear-gradient(170deg,rgba(255,255,255,0.06),rgba(255,255,255,0.02))] p-3 shadow-[0_12px_26px_rgba(8,10,20,0.3)]">
       <div className="flex items-start gap-3">
         <div className="min-w-0 flex-1">
           {draft.kind === "image" && (
@@ -886,7 +886,7 @@ function MediaDraftPreview({
               }
             }}
             placeholder={t("addCaption")}
-            className="flex-1 rounded-xl border border-border bg-muted px-4 py-2.5 text-sm text-foreground placeholder-muted-foreground outline-none transition-colors focus:border-primary/50"
+            className="flex-1 rounded-xl border border-white/12 bg-[linear-gradient(170deg,rgba(255,255,255,0.06),rgba(255,255,255,0.02))] px-4 py-2.5 text-sm text-foreground placeholder-muted-foreground/90 outline-none transition-all duration-200 focus:border-primary/50 focus:shadow-[0_0_0_1px_rgba(123,97,255,0.25),0_12px_24px_rgba(14,16,34,0.24)]"
           />
         )}
         <GatedButton
@@ -896,7 +896,7 @@ function MediaDraftPreview({
           disabled={busy}
           onClick={onSend}
           className={cn(
-            "h-9 w-9 shrink-0 bg-primary p-0 hover:bg-primary/90 disabled:opacity-40",
+            "h-9 w-9 shrink-0 bg-primary p-0 shadow-[0_10px_22px_rgba(93,74,199,0.45)] transition-all duration-200 hover:scale-[1.03] hover:bg-primary/90 disabled:opacity-40",
             draft.kind === "audio" && "ml-auto",
           )}
         >
