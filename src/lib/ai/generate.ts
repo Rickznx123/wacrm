@@ -8,6 +8,7 @@ import {
 import { HANDOFF_SENTINEL, aiRequestTimeoutMs } from './defaults'
 import { generateOpenAi } from './providers/openai'
 import { generateAnthropic } from './providers/anthropic'
+import type { ToolDefinition } from './tools/buscar-produto'
 
 export interface GenerateArgs {
   config: AiConfig
@@ -15,6 +16,9 @@ export interface GenerateArgs {
   systemPrompt: string
   /** Recent conversation turns, oldest first. */
   messages: ChatMessage[]
+  /** Optional function-calling tools (OpenAI only, for now). */
+  tools?: ToolDefinition[]
+  toolExecutor?: (name: string, argsJson: string) => Promise<unknown>
 }
 
 /**
@@ -23,7 +27,7 @@ export interface GenerateArgs {
  * of the raw text. Throws `AiError` on any provider/network failure.
  */
 export async function generateReply(args: GenerateArgs): Promise<GenerateResult> {
-  const { config, systemPrompt, messages } = args
+  const { config, systemPrompt, messages, tools, toolExecutor } = args
   const timeoutMs = aiRequestTimeoutMs()
   const providerArgs = {
     apiKey: config.apiKey,
@@ -36,7 +40,7 @@ export async function generateReply(args: GenerateArgs): Promise<GenerateResult>
   let result: { text: string; usage: AiUsage | null }
   switch (config.provider) {
     case 'openai':
-      result = await generateOpenAi(providerArgs)
+      result = await generateOpenAi({ ...providerArgs, tools, toolExecutor })
       break
     case 'anthropic':
       result = await generateAnthropic(providerArgs)

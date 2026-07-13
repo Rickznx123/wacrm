@@ -11,6 +11,7 @@ import { engineSendText } from '@/lib/flows/meta-send'
 import { checkRateLimit, RATE_LIMITS } from '@/lib/rate-limit'
 import { resolveEvolutionProvider } from '@/integrations/registry'
 import { sanitizePhoneForMeta, isValidE164 } from '@/lib/whatsapp/phone-utils'
+import { buscarProdutoTool, executePharmacyTool, pharmacyToolsAvailable } from './tools/buscar-produto'
 
 interface DispatchArgs {
   /** Tenancy key — drives config, contact, and whatsapp_config lookups. */
@@ -217,10 +218,13 @@ export async function dispatchInboundToAiReply(
       knowledge,
     })
 
+    const useTools = config.provider === 'openai' && pharmacyToolsAvailable()
+
     const { text, handoff, usage } = await generateReply({
       config,
       systemPrompt,
       messages,
+      ...(useTools ? { tools: [buscarProdutoTool], toolExecutor: executePharmacyTool } : {}),
     })
 
     // Record token spend on the account's BYO key. Fire-and-forget so it
