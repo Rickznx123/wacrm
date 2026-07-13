@@ -10,7 +10,7 @@ const PONTE_API_KEY = process.env.PONTE_API_KEY
 export const buscarProdutoTool: ToolDefinition = {
   name: 'buscar_produto',
   description:
-    'Busca produtos, preços e estoque em tempo real na farmácia. Use sempre que o cliente perguntar se um produto/medicamento está disponível ou qual o preço.',
+    'Busca produtos, preços e estoque em tempo real na farmácia. Use sempre que o cliente perguntar se um produto ou medicamento está disponível, qual o preço ou informações de estoque.',
   parameters: {
     type: 'object',
     properties: {
@@ -24,6 +24,9 @@ export const buscarProdutoTool: ToolDefinition = {
 }
 
 export function pharmacyToolsAvailable(): boolean {
+  console.log('[TOOLS] PONTE_URL =', PONTE_URL)
+  console.log('[TOOLS] PONTE_API_KEY existe =', !!PONTE_API_KEY)
+
   return Boolean(PONTE_URL && PONTE_API_KEY)
 }
 
@@ -31,19 +34,34 @@ export async function executePharmacyTool(
   name: string,
   argsJson: string,
 ): Promise<unknown> {
+  console.log('[TOOLS] Chamando ferramenta:', name)
+  console.log('[TOOLS] Argumentos:', argsJson)
+
   if (name !== 'buscar_produto') {
     throw new Error(`unknown tool: ${name}`)
   }
+
   const { nome } = JSON.parse(argsJson) as { nome: string }
-  const res = await fetch(
-    `${PONTE_URL}/produtos/buscar?nome=${encodeURIComponent(nome)}`,
-    {
-      headers: { 'x-api-key': PONTE_API_KEY as string },
-      signal: AbortSignal.timeout(8000),
+
+  const url = `${PONTE_URL}/produtos/buscar?nome=${encodeURIComponent(nome)}`
+  console.log('[TOOLS] URL:', url)
+
+  const res = await fetch(url, {
+    headers: {
+      'x-api-key': PONTE_API_KEY as string,
     },
-  )
+    signal: AbortSignal.timeout(8000),
+  })
+
+  console.log('[TOOLS] Status:', res.status)
+
   if (!res.ok) {
     return { erro: `ponte respondeu ${res.status}` }
   }
-  return res.json()
+
+  const data = await res.json()
+
+  console.log('[TOOLS] Resposta:', JSON.stringify(data))
+
+  return data
 }
