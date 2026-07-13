@@ -10,7 +10,7 @@ const PONTE_API_KEY = process.env.PONTE_API_KEY
 export const buscarProdutoTool: ToolDefinition = {
   name: 'buscar_produto',
   description:
-    'Busca produtos, preços e estoque em tempo real na farmácia. Use sempre que o cliente perguntar sobre disponibilidade, preço ou estoque.',
+    'Busca produtos, preços e estoque em tempo real na farmácia. Sempre utilize esta ferramenta quando o cliente perguntar sobre disponibilidade, preço ou estoque. Se a ferramenta retornar apenas um produto, informe o nome, o preço e a disponibilidade ao cliente. Se retornar mais de um produto, apresente uma lista numerada (1, 2, 3...) contendo o nome e o preço de cada opção e peça que o cliente escolha apenas o número da opção desejada. Nunca escolha um produto pelo cliente quando houver mais de um resultado. Aguarde a escolha do cliente antes de continuar o atendimento.',
   parameters: {
     type: 'object',
     properties: {
