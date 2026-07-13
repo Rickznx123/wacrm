@@ -10,13 +10,14 @@ const PONTE_API_KEY = process.env.PONTE_API_KEY
 export const buscarProdutoTool: ToolDefinition = {
   name: 'buscar_produto',
   description:
-    'Busca produtos, preços e estoque em tempo real na farmácia. Use sempre que o cliente perguntar se um produto ou medicamento está disponível, qual o preço ou informações de estoque.',
+    'Busca produtos, preços e estoque em tempo real na farmácia. Use sempre que o cliente perguntar sobre disponibilidade, preço ou estoque.',
   parameters: {
     type: 'object',
     properties: {
       nome: {
         type: 'string',
-        description: "Nome ou parte do nome do produto buscado, ex: 'dipirona'",
+        description:
+          "Nome ou parte do nome do produto buscado, ex: 'dipirona'",
       },
     },
     required: ['nome'],
@@ -43,25 +44,52 @@ export async function executePharmacyTool(
 
   const { nome } = JSON.parse(argsJson) as { nome: string }
 
-  const url = `${PONTE_URL}/produtos/buscar?nome=${encodeURIComponent(nome)}`
-  console.log('[TOOLS] URL:', url)
+  async function consultar(busca: string) {
+    const url = `${PONTE_URL}/produtos/buscar?nome=${encodeURIComponent(busca)}`
 
-  const res = await fetch(url, {
-    headers: {
-      'x-api-key': PONTE_API_KEY as string,
-    },
-    signal: AbortSignal.timeout(8000),
-  })
+    console.log('[TOOLS] Consultando:', busca)
 
-  console.log('[TOOLS] Status:', res.status)
+    const res = await fetch(url, {
+      headers: {
+        'x-api-key': PONTE_API_KEY as string,
+      },
+      signal: AbortSignal.timeout(8000),
+    })
 
-  if (!res.ok) {
-    return { erro: `ponte respondeu ${res.status}` }
+    console.log('[TOOLS] Status:', res.status)
+
+    if (!res.ok) {
+      return { erro: `ponte respondeu ${res.status}` }
+    }
+
+    return res.json()
   }
 
-  const data = await res.json()
+  // Primeira tentativa: busca exatamente o que a IA pediu
+  let data = await consultar(nome)
 
-  console.log('[TOOLS] Resposta:', JSON.stringify(data))
+  // Se não encontrou nada, faz uma segunda busca simplificada
+  if (
+    typeof data === 'object' &&
+    data &&
+    'total' in data &&
+    Number((data as any).total) === 0
+  ) {
+    const buscaSimplificada = nome
+      .replace(/\b\d+\s*(mg|ml|g)\b/gi, '')
+      .replace(
+        /\b(comprimido|comprimidos|capsula|cápsula|capsulas|cápsulas|gotas|xarope)\b/gi,
+        '',
+      )
+      .trim()
+
+    if (buscaSimplificada && buscaSimplificada !== nome) {
+      console.log('[TOOLS] Tentando novamente com:', buscaSimplificada)
+      data = await consultar(buscaSimplificada)
+    }
+  }
+
+  console.log('[TOOLS] Resposta final:', JSON.stringify(data))
 
   return data
 }
