@@ -704,25 +704,28 @@ async function persistInboundMessage(
   // This UPDATE is app-driven (not only SQL-function-driven) so the webhook
   // behavior is consistent even if DB migrations lag behind application deploys.
   if (conv.row.status === 'closed') {
+    const reopenPayload = {
+      status: 'pending',
+      assigned_agent_id: null,
+      ai_handoff_summary: null,
+      ai_autoreply_disabled: false,
+      ai_reply_count: 0,
+      session_started_at: msg.timestampIso,
+      updated_at: new Date().toISOString(),
+    }
+
     logStructured('info', 'conversation.reopen_attempt', {
       ...logCtx,
       stage: 'conversations.reopen_on_inbound',
       conversationId: conv.row.id,
       statusBeforeInbound: conv.row.status,
       messageId: msg.messageId,
+      updatePayload: reopenPayload,
     })
 
     const { data: reopenRows, error: reopenErr } = await supabaseAdmin()
       .from('conversations')
-      .update({
-        status: 'pending',
-        assigned_agent_id: null,
-        ai_handoff_summary: null,
-        ai_autoreply_disabled: false,
-        ai_reply_count: 0,
-        session_started_at: msg.timestampIso,
-        updated_at: new Date().toISOString(),
-      })
+      .update(reopenPayload)
       .eq('id', conv.row.id)
       .select('id, status')
 
@@ -740,6 +743,23 @@ async function persistInboundMessage(
       statusAfterInbound,
       updateResult: reopenErr ? 'error' : 'ok',
       affectedRows,
+      updatePayload: reopenPayload,
+      errorMessage:
+        reopenErr && typeof reopenErr === 'object' && 'message' in reopenErr
+          ? String((reopenErr as { message?: unknown }).message ?? '')
+          : null,
+      errorDetails:
+        reopenErr && typeof reopenErr === 'object' && 'details' in reopenErr
+          ? String((reopenErr as { details?: unknown }).details ?? '')
+          : null,
+      errorHint:
+        reopenErr && typeof reopenErr === 'object' && 'hint' in reopenErr
+          ? String((reopenErr as { hint?: unknown }).hint ?? '')
+          : null,
+      errorCode:
+        reopenErr && typeof reopenErr === 'object' && 'code' in reopenErr
+          ? String((reopenErr as { code?: unknown }).code ?? '')
+          : null,
       ...(reopenErr ? sanitizeErrorContext(reopenErr) : {}),
     })
 
@@ -748,6 +768,23 @@ async function persistInboundMessage(
         ...logCtx,
         stage: 'conversations.reopen_on_inbound',
         conversationId: conv.row.id,
+        updatePayload: reopenPayload,
+        errorMessage:
+          typeof reopenErr === 'object' && reopenErr && 'message' in reopenErr
+            ? String((reopenErr as { message?: unknown }).message ?? '')
+            : null,
+        errorDetails:
+          typeof reopenErr === 'object' && reopenErr && 'details' in reopenErr
+            ? String((reopenErr as { details?: unknown }).details ?? '')
+            : null,
+        errorHint:
+          typeof reopenErr === 'object' && reopenErr && 'hint' in reopenErr
+            ? String((reopenErr as { hint?: unknown }).hint ?? '')
+            : null,
+        errorCode:
+          typeof reopenErr === 'object' && reopenErr && 'code' in reopenErr
+            ? String((reopenErr as { code?: unknown }).code ?? '')
+            : null,
         ...sanitizeErrorContext(reopenErr),
       })
       return isTransientError(reopenErr)
