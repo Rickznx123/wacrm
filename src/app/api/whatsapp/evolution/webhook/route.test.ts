@@ -4,8 +4,14 @@ type ConversationRow = {
   id: string
   account_id: string
   contact_id: string
+  status: 'open' | 'pending' | 'closed'
+  assigned_agent_id: string | null
   unread_count: number
   last_message_text: string | null
+  ai_autoreply_disabled: boolean
+  ai_reply_count: number
+  ai_handoff_summary: string | null
+  session_started_at: string | null
 }
 
 type MessageRow = {
@@ -71,10 +77,21 @@ const createClientMock = vi.fn(() => {
       })
 
       if (conversationId === dbState.conversation.id) {
+        const wasClosed = dbState.conversation.status === 'closed'
         dbState.conversation = {
           ...dbState.conversation,
+          status: wasClosed ? 'pending' : dbState.conversation.status,
+          assigned_agent_id: wasClosed ? null : dbState.conversation.assigned_agent_id,
           unread_count: dbState.conversation.unread_count + 1,
           last_message_text: String(payload.p_last_message_text),
+          ai_autoreply_disabled: wasClosed
+            ? false
+            : dbState.conversation.ai_autoreply_disabled,
+          ai_reply_count: wasClosed ? 0 : dbState.conversation.ai_reply_count,
+          ai_handoff_summary: wasClosed ? null : dbState.conversation.ai_handoff_summary,
+          session_started_at: wasClosed
+            ? String(payload.p_created_at)
+            : dbState.conversation.session_started_at,
         }
         dbState.conversationUpdates += 1
       }
@@ -115,6 +132,14 @@ const createClientMock = vi.fn(() => {
           if (id === dbState.conversation.id) {
             dbState.conversation = {
               ...dbState.conversation,
+              status:
+                typeof ctx.updatePayload.status === 'string'
+                  ? (ctx.updatePayload.status as 'open' | 'pending' | 'closed')
+                  : dbState.conversation.status,
+              assigned_agent_id:
+                'assigned_agent_id' in ctx.updatePayload
+                  ? (ctx.updatePayload.assigned_agent_id as string | null)
+                  : dbState.conversation.assigned_agent_id,
               unread_count:
                 typeof ctx.updatePayload.unread_count === 'number'
                   ? (ctx.updatePayload.unread_count as number)
@@ -123,6 +148,22 @@ const createClientMock = vi.fn(() => {
                 typeof ctx.updatePayload.last_message_text === 'string'
                   ? (ctx.updatePayload.last_message_text as string)
                   : dbState.conversation.last_message_text,
+              ai_autoreply_disabled:
+                typeof ctx.updatePayload.ai_autoreply_disabled === 'boolean'
+                  ? (ctx.updatePayload.ai_autoreply_disabled as boolean)
+                  : dbState.conversation.ai_autoreply_disabled,
+              ai_reply_count:
+                typeof ctx.updatePayload.ai_reply_count === 'number'
+                  ? (ctx.updatePayload.ai_reply_count as number)
+                  : dbState.conversation.ai_reply_count,
+              ai_handoff_summary:
+                'ai_handoff_summary' in ctx.updatePayload
+                  ? (ctx.updatePayload.ai_handoff_summary as string | null)
+                  : dbState.conversation.ai_handoff_summary,
+              session_started_at:
+                typeof ctx.updatePayload.session_started_at === 'string'
+                  ? (ctx.updatePayload.session_started_at as string)
+                  : dbState.conversation.session_started_at,
             }
             dbState.conversationUpdates += 1
           }
@@ -248,7 +289,7 @@ const createClientMock = vi.fn(() => {
           ctx.updatePayload = payload
           return builder
         },
-        insert(payload: Record<string, unknown>) {
+        insert() {
           return {
             select() {
               return {
@@ -315,8 +356,14 @@ describe('Evolution webhook idempotency', () => {
         id: 'conv-1',
         account_id: 'acct-1',
         contact_id: 'contact-1',
+        status: 'open',
+        assigned_agent_id: null,
         unread_count: 0,
         last_message_text: null,
+        ai_autoreply_disabled: false,
+        ai_reply_count: 0,
+        ai_handoff_summary: null,
+        session_started_at: null,
       },
       messages: [],
       contactUpdates: [],
@@ -660,5 +707,25 @@ describe('Evolution webhook idempotency', () => {
         }),
       ]),
     )
+  })
+
+  it('reopens a closed conversation as pending and resets AI/session state', async () => {
+    dbState.conversation.status = 'closed'
+    dbState.conversation.assigned_agent_id = 'agent-1'
+    dbState.conversation.ai_autoreply_disabled = true
+    dbState.conversation.ai_reply_count = 4
+    dbState.conversation.ai_handoff_summary = 'handoff note'
+    dbState.conversation.session_started_at = '2026-01-01T00:00:00.000Z'
+
+    const payload = makeInboundPayload('evo-msg-reopen-1')
+    const response = await sendEventOnce(payload)
+
+    expect(response.status).toBe(200)
+    expect(dbState.conversation.status).toBe('pending')
+    expect(dbState.conversation.assigned_agent_id).toBeNull()
+    expect(dbState.conversation.ai_autoreply_disabled).toBe(false)
+    expect(dbState.conversation.ai_reply_count).toBe(0)
+    expect(dbState.conversation.ai_handoff_summary).toBeNull()
+    expect(dbState.conversation.session_started_at).toBe('2023-11-14T22:13:20.000Z')
   })
 })

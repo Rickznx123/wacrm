@@ -286,6 +286,10 @@ export default function InboxPage() {
                 c.id === newMsg.conversation_id
                   ? {
                       ...c,
+                      status:
+                        newMsg.sender_type === "customer" && c.status === "closed"
+                          ? "pending"
+                          : c.status,
                       last_message_text: newMsg.content_text ?? "",
                       last_message_at: newMsg.created_at,
                       unread_count: shouldIncrementUnread

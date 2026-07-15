@@ -133,7 +133,6 @@ export async function dispatchInboundToAiReply(
     contactId,
     configOwnerUserId,
     channelProvider = 'meta',
-    inboundMessageId = null,
   } = args
 
   try {
@@ -165,7 +164,7 @@ export async function dispatchInboundToAiReply(
 
     const { data: conv, error: convErr } = await db
       .from('conversations')
-      .select('assigned_agent_id, ai_autoreply_disabled, ai_reply_count')
+      .select('assigned_agent_id, ai_autoreply_disabled, ai_reply_count, session_started_at')
       .eq('id', conversationId)
       .maybeSingle()
     if (convErr || !conv) {
@@ -183,7 +182,11 @@ export async function dispatchInboundToAiReply(
       return
     }
 
-    const messages = await buildConversationContext(db, conversationId)
+    const messages = await buildConversationContext(
+      db,
+      conversationId,
+      conv.session_started_at ?? null,
+    )
     if (messages.length === 0) {
       return
     }

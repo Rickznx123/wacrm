@@ -1,7 +1,7 @@
 import { NextResponse, after } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
 import { decrypt, encrypt, isLegacyFormat } from '@/lib/whatsapp/encryption'
-import { getMediaUrl, downloadMedia } from '@/lib/whatsapp/meta-api'
+import { getMediaUrl } from '@/lib/whatsapp/meta-api'
 import { normalizePhone } from '@/lib/whatsapp/phone-utils'
 import { findExistingContact, isUniqueViolation } from '@/lib/contacts/dedupe'
 import { verifyMetaWebhookSignature } from '@/lib/whatsapp/webhook-signature'
@@ -713,9 +713,21 @@ async function processMessage(
   }
 
   // Update conversation
+  const wasClosed = conversation.status === 'closed'
   const { error: convError } = await supabaseAdmin()
     .from('conversations')
     .update({
+      // Closed thread + new customer message means a new waiting cycle.
+      ...(wasClosed
+        ? {
+            status: 'pending',
+            assigned_agent_id: null,
+            ai_autoreply_disabled: false,
+            ai_reply_count: 0,
+            ai_handoff_summary: null,
+            session_started_at: new Date(parseInt(message.timestamp) * 1000).toISOString(),
+          }
+        : {}),
       last_message_text: contentText || `[${message.type}]`,
       last_message_at: new Date().toISOString(),
       unread_count: (conversation.unread_count || 0) + 1,

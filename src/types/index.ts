@@ -181,6 +181,8 @@ export interface Conversation {
   ai_autoreply_disabled?: boolean;
   ai_reply_count?: number;
   ai_handoff_summary?: string | null;
+  /** Logical start of the current active service cycle. */
+  session_started_at?: string | null;
 }
 
 // ============================================================

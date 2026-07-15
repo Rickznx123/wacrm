@@ -1,4 +1,4 @@
-import { describe, it, expect } from 'vitest'
+import { describe, it, expect, vi } from 'vitest'
 import type { SupabaseClient } from '@supabase/supabase-js'
 import { buildConversationContext } from './context'
 
@@ -9,10 +9,27 @@ function fakeDb(rows: unknown[]): SupabaseClient {
     from: () => chain,
     select: () => chain,
     eq: () => chain,
+    gte: () => chain,
     order: () => chain,
     limit: () => Promise.resolve({ data: rows, error: null }),
   }
   return chain as unknown as SupabaseClient
+}
+
+function fakeDbWithSpies(rows: unknown[]) {
+  const gte = vi.fn(() => chain)
+  const chain = {
+    from: () => chain,
+    select: () => chain,
+    eq: () => chain,
+    gte,
+    order: () => chain,
+    limit: () => Promise.resolve({ data: rows, error: null }),
+  }
+  return {
+    db: chain as unknown as SupabaseClient,
+    gte,
+  }
 }
 
 describe('buildConversationContext', () => {
@@ -49,5 +66,20 @@ describe('buildConversationContext', () => {
       'conv-1',
     )
     expect(out).toEqual([{ role: 'user', content: 'real' }])
+  })
+
+  it('limits context to the current logical session when provided', async () => {
+    const { db, gte } = fakeDbWithSpies([
+      { sender_type: 'customer', content_text: 'new-session-msg' },
+    ])
+
+    const out = await buildConversationContext(
+      db,
+      'conv-1',
+      '2026-07-15T12:00:00.000Z',
+    )
+
+    expect(gte).toHaveBeenCalledWith('created_at', '2026-07-15T12:00:00.000Z')
+    expect(out).toEqual([{ role: 'user', content: 'new-session-msg' }])
   })
 })

@@ -19,13 +19,19 @@ interface DbMessage {
 export async function buildConversationContext(
   db: SupabaseClient,
   conversationId: string,
+  sessionStartedAt?: string | null,
   limit: number = aiContextMessageLimit(),
 ): Promise<ChatMessage[]> {
-  const { data, error } = await db
+  let query = db
     .from('messages')
     .select('sender_type, content_text')
     .eq('conversation_id', conversationId)
     .eq('content_type', 'text')
+  if (sessionStartedAt) {
+    query = query.gte('created_at', sessionStartedAt)
+  }
+
+  const { data, error } = await query
     .order('created_at', { ascending: false })
     .limit(limit)
 
