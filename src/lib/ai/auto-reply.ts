@@ -11,7 +11,7 @@ import { engineSendText } from '@/lib/flows/meta-send'
 import { checkRateLimit, RATE_LIMITS } from '@/lib/rate-limit'
 import { resolveEvolutionProvider } from '@/integrations/registry'
 import { sanitizePhoneForMeta, isValidE164 } from '@/lib/whatsapp/phone-utils'
-import { getDeliveryFeeResponse } from '@/lib/delivery-fees'
+import { DELIVERY_FEES, extractNeighborhood, getDeliveryFeeResponse } from '@/lib/delivery-fees'
 import { buscarProdutoTool, executePharmacyTool, pharmacyToolsAvailable } from './tools/buscar-produto'
 
 interface DispatchArgs {
@@ -209,10 +209,22 @@ export async function dispatchInboundToAiReply(
     }
 
     const customerQuery = latestUserMessage(messages)
+    console.log('[DELIVERY] customerQuery:', customerQuery)
+
+    const bairro = extractNeighborhood(customerQuery)
+    console.log('[DELIVERY] extractedNeighborhood:', bairro)
 
     const deliveryReply = getDeliveryFeeResponse(customerQuery)
+    console.log('[DELIVERY] deliveryReply:', deliveryReply)
+
+    if (!bairro) {
+      console.log('[DELIVERY] motivo: nenhum bairro identificado na mensagem.')
+    } else if (!Object.prototype.hasOwnProperty.call(DELIVERY_FEES, bairro)) {
+      console.log('[DELIVERY] motivo: bairro identificado sem taxa cadastrada na tabela local.')
+    }
 
     if (deliveryReply) {
+      console.log('[DELIVERY] Respondendo taxa local.')
       await sendAiReply({
         accountId,
         userId: configOwnerUserId,

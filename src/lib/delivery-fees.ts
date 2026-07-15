@@ -75,6 +75,9 @@ export const DELIVERY_FEES: Record<string, number> = {
   'JARDIM DAS FLORES': 15,
   'HAMOA (BAIRRO FECHADO)': 15,
   'J. PLANALTO': 15,
+  'JARDIM EUROPA': 8,
+  'JARDIM IPIRANGA': 8,
+  'JARDIM ELDORADO': 8,
   'LATICINIO LACTIVITI': 15,
   'GRUPO BRASIL NORTE (GBN)': 15,
   'MOTEL OASIS': 15,
@@ -112,7 +115,7 @@ export const DELIVERY_FEES: Record<string, number> = {
 }
 
 const LOCATION_MARKERS_RE =
-  /\b(?:bairro|setor|setores|regiao|regiao de|regiao do|regiao da|na|no|em|para|pro|pra|do|da)\s+([\p{L}0-9][\p{L}0-9\s\-]{1,60})/giu
+  /\b(?:bairro|setor|setores|regiao|regiao de|regiao do|regiao da|na|no|em|para|pro|pra)\s+([\p{L}0-9][\p{L}0-9\s\-]{1,60})/giu
 
 function normalize(value: string): string {
   return value
@@ -128,6 +131,46 @@ function trimCandidate(value: string): string {
   return value
     .split(/\b(?:hoje|amanha|agora|por favor|pfv|valor|taxa|entrega|delivery|frete)\b/i)[0]
     .trim()
+}
+
+function cleanupNeighborhoodCandidate(value: string): string {
+  return value
+    .replace(/^["'`´\s]+|["'`´\s]+$/g, '')
+    .replace(/^(?:o|a|os|as|um|uma)\s+/i, '')
+    .replace(/^(?:bairro|setor|setores|regiao(?:\s+de|\s+do|\s+da)?)\s+/i, '')
+    .replace(/\s+/g, ' ')
+    .trim()
+}
+
+function isLikelyNeighborhood(value: string): boolean {
+  const v = normalize(value)
+  if (!v) return false
+  if (v.length < 3) return false
+
+  const blacklist = new Set([
+    'entrega',
+    'delivery',
+    'frete',
+    'taxa',
+    'valor',
+    'qual',
+    'quanto',
+    'moro',
+    'preciso',
+    'de',
+    'do',
+    'da',
+    'no',
+    'na',
+    'em',
+    'para',
+    'pro',
+    'pra',
+    'o',
+    'a',
+  ])
+
+  return !blacklist.has(v)
 }
 
 const NEIGHBORHOOD_INDEX = Object.keys(DELIVERY_FEES)
@@ -160,10 +203,12 @@ export function extractNeighborhood(text: string): string | null {
   for (const match of query.matchAll(LOCATION_MARKERS_RE)) {
     const raw = (match[1] ?? '').trim().replace(/[?!.;,]+$/g, '')
     if (!raw) continue
-    const candidate = trimCandidate(raw)
-    if (!candidate) continue
+    const candidate = cleanupNeighborhoodCandidate(trimCandidate(raw))
+    if (!candidate || !isLikelyNeighborhood(candidate)) continue
     const mapped = matchNeighborhood(candidate)
     if (mapped) return mapped
+
+    return candidate.toLocaleUpperCase('pt-BR')
   }
 
   const normalizedQuery = normalize(query)
