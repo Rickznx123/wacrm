@@ -13,7 +13,6 @@ import { useRealtime } from "@/hooks/use-realtime";
 import { ConversationList } from "@/components/inbox/conversation-list";
 import { MessageThread } from "@/components/inbox/message-thread";
 import { ContactSidebar } from "@/components/inbox/contact-sidebar";
-import { toast } from "sonner";
 import { WifiOff } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { ASCENT } from "@/lib/ui/ascent";
@@ -21,6 +20,36 @@ import { ASCENT } from "@/lib/ui/ascent";
 // Remembers the agent's show/hide choice for the desktop contact panel
 // across reloads and sessions (device-scoped, like the theme prefs).
 const CONTACT_PANEL_STORAGE_KEY = "wacrm:inbox:contact-panel-open";
+const TEMP_MESSAGE_MATCH_WINDOW_MS = 2 * 60 * 1000;
+
+function toTimestamp(value?: string | null): number {
+  if (!value) return 0;
+  const ts = new Date(value).getTime();
+  return Number.isFinite(ts) ? ts : 0;
+}
+
+function sortConversationsByLastMessage(convs: Conversation[]): Conversation[] {
+  return [...convs].sort(
+    (a, b) => toTimestamp(b.last_message_at) - toTimestamp(a.last_message_at),
+  );
+}
+
+function isOptimisticMatch(temp: Message, incoming: Message): boolean {
+  if (!temp.id.startsWith("temp-")) return false;
+  if (temp.sender_type !== "agent") return false;
+  if (incoming.sender_type !== "agent" && incoming.sender_type !== "bot") {
+    return false;
+  }
+  if (temp.conversation_id !== incoming.conversation_id) return false;
+  if (temp.content_type !== incoming.content_type) return false;
+  if ((temp.reply_to_message_id ?? null) !== (incoming.reply_to_message_id ?? null)) {
+    return false;
+  }
+  if ((temp.content_text ?? "") !== (incoming.content_text ?? "")) return false;
+
+  const delta = Math.abs(toTimestamp(temp.created_at) - toTimestamp(incoming.created_at));
+  return delta <= TEMP_MESSAGE_MATCH_WINDOW_MS;
+}
 
 export default function InboxPage() {
   const t = useTranslations("Inbox.page");
@@ -226,11 +255,18 @@ export default function InboxPage() {
           setMessages((prev) => {
             // Avoid duplicates
             if (prev.some((m) => m.id === newMsg.id)) return prev;
-            // Replace optimistic message if it exists
-            const withoutOptimistic = prev.filter(
-              (m) => !m.id.startsWith("temp-")
-            );
-            return [...withoutOptimistic, newMsg];
+
+            // Replace a matching optimistic outgoing bubble only.
+            // The previous implementation removed *all* temp rows,
+            // which dropped unrelated in-flight sends.
+            const optimisticIdx = prev.findIndex((m) => isOptimisticMatch(m, newMsg));
+            if (optimisticIdx >= 0) {
+              const next = prev.slice();
+              next[optimisticIdx] = newMsg;
+              return next;
+            }
+
+            return [...prev, newMsg];
           });
         }
 
@@ -240,19 +276,24 @@ export default function InboxPage() {
         // knownConvIdsRef for why a closure flag inside the updater would
         // always read false here.
         if (knownConvIdsRef.current.has(newMsg.conversation_id)) {
+          const shouldIncrementUnread =
+            newMsg.sender_type === "customer" &&
+            activeConversation?.id !== newMsg.conversation_id;
+
           setConversations((prev) =>
-            prev.map((c) =>
-              c.id === newMsg.conversation_id
-                ? {
-                    ...c,
-                    last_message_text: newMsg.content_text ?? "",
-                    last_message_at: newMsg.created_at,
-                    unread_count:
-                      activeConversation?.id === newMsg.conversation_id
-                        ? 0
-                        : c.unread_count + 1,
-                  }
-                : c,
+            sortConversationsByLastMessage(
+              prev.map((c) =>
+                c.id === newMsg.conversation_id
+                  ? {
+                      ...c,
+                      last_message_text: newMsg.content_text ?? "",
+                      last_message_at: newMsg.created_at,
+                      unread_count: shouldIncrementUnread
+                        ? c.unread_count + 1
+                        : c.unread_count,
+                    }
+                  : c,
+              ),
             ),
           );
         } else {
@@ -308,14 +349,16 @@ export default function InboxPage() {
           // UPDATE to round-trip. Non-active convs take the value as-is.
           const isActive = activeConversation?.id === conv.id;
           setConversations((prev) =>
-            prev.map((c) =>
-              c.id === conv.id
-                ? {
-                    ...c,
-                    ...conv,
-                    unread_count: isActive ? 0 : conv.unread_count,
-                  }
-                : c,
+            sortConversationsByLastMessage(
+              prev.map((c) =>
+                c.id === conv.id
+                  ? {
+                      ...c,
+                      ...conv,
+                      unread_count: isActive ? 0 : conv.unread_count,
+                    }
+                  : c,
+              ),
             ),
           );
         } else {
