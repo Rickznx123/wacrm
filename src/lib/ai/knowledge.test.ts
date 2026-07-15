@@ -14,6 +14,7 @@ interface FakeState {
   fts: { id: string; content: string }[]
   chunkCount: number
   rpcCalls: string[]
+  rpcArgs: Array<{ name: string; args: unknown }>
   inserted: Record<string, unknown>[] | null
   deletedFor: string | null
 }
@@ -24,12 +25,14 @@ function makeDb() {
     fts: [],
     chunkCount: 5, // account has a non-empty KB by default
     rpcCalls: [],
+    rpcArgs: [],
     inserted: null,
     deletedFor: null,
   }
   const db = {
-    rpc: (name: string) => {
+    rpc: (name: string, args: unknown) => {
       state.rpcCalls.push(name)
+      state.rpcArgs.push({ name, args })
       if (name === 'match_ai_knowledge_semantic')
         return Promise.resolve({ data: state.semantic, error: null })
       if (name === 'match_ai_knowledge_fts')
@@ -118,6 +121,34 @@ describe('retrieveKnowledge', () => {
       'match_ai_knowledge_semantic',
       'match_ai_knowledge_fts',
     ])
+  })
+
+  it('prioritizes lexical neighborhood/sector retrieval for delivery queries', async () => {
+    const { db, state } = makeDb()
+    state.fts = [{ id: 'f1', content: 'Setor Bueno - R$ 12,50' }]
+    state.semantic = [{ id: 's1', content: 'General delivery policy' }]
+
+    const out = await retrieveKnowledge(
+      db,
+      'acct',
+      { embeddingsApiKey: 'sk-x' },
+      'Qual a taxa de entrega para o setor Bueno?',
+      2,
+    )
+
+    expect(out).toEqual(['Setor Bueno - R$ 12,50', 'General delivery policy'])
+    expect(state.rpcCalls).toEqual([
+      'match_ai_knowledge_fts',
+      'match_ai_knowledge_semantic',
+    ])
+
+    const firstCall = state.rpcArgs[0]
+    expect(firstCall?.name).toBe('match_ai_knowledge_fts')
+    expect(firstCall?.args).toMatchObject({
+      p_account_id: 'acct',
+      p_match_count: 2,
+    })
+    expect((firstCall?.args as { p_query?: string })?.p_query).toContain('setor Bueno')
   })
 })
 

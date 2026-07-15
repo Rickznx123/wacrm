@@ -14,6 +14,53 @@ interface MatchRow {
   content: string
 }
 
+const DELIVERY_RE =
+  /\b(entrega|delivery|frete|taxa(?:\s+de\s+entrega)?|bairro|setor|setores|quil[oô]metro|km)\b/i
+
+const LOCATION_HINT_RE =
+  /\b(?:bairro|setor|setores|na|no|em|para|pro|pra|do|da)\s+([\p{L}0-9][\p{L}0-9\s\-]{1,60})/giu
+
+function normalizeForSearch(value: string): string {
+  return value
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .toLowerCase()
+    .replace(/[^a-z0-9\s-]/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim()
+}
+
+function isDeliveryQuery(query: string): boolean {
+  return DELIVERY_RE.test(query)
+}
+
+function extractLocationHints(query: string): string[] {
+  const hints: string[] = []
+  for (const m of query.matchAll(LOCATION_HINT_RE)) {
+    const raw = (m[1] ?? '').trim().replace(/[?!.;,]+$/g, '')
+    if (!raw) continue
+    const trimmed = raw
+      .split(/\b(?:hoje|amanha|agora|por favor|pfv|me|valor|taxa|entrega)\b/i)[0]
+      .trim()
+    if (trimmed.length >= 3) hints.push(trimmed)
+  }
+
+  const seen = new Set<string>()
+  return hints.filter((h) => {
+    const key = normalizeForSearch(h)
+    if (!key || seen.has(key)) return false
+    seen.add(key)
+    return true
+  })
+}
+
+function buildDeliveryLexicalQuery(query: string): string {
+  const q = query.trim()
+  const hints = extractLocationHints(q)
+  const extra = ['entrega', 'taxa', 'frete', ...hints]
+  return [q, ...extra].join(' ').replace(/\s+/g, ' ').trim()
+}
+
 /**
  * (Re)build the chunks for one document. Deletes the document's
  * existing chunks, re-chunks the content, and — when the account has an
@@ -106,9 +153,31 @@ export async function retrieveKnowledge(
   }
 
   const picked = new Map<string, string>() // id → content, preserves order
+  const deliveryQuery = isDeliveryQuery(query)
+  const lexicalQuery = deliveryQuery ? buildDeliveryLexicalQuery(query) : query
+
+  // Delivery-specific path: start with lexical retrieval so exact
+  // neighborhood/sector names from the user's message are prioritized.
+  if (deliveryQuery) {
+    try {
+      const { data, error } = await db.rpc('match_ai_knowledge_fts', {
+        p_account_id: accountId,
+        p_query: lexicalQuery,
+        p_match_count: k,
+      })
+      if (!error && Array.isArray(data)) {
+        for (const row of data as MatchRow[]) {
+          if (picked.size >= k) break
+          if (!picked.has(row.id)) picked.set(row.id, row.content)
+        }
+      }
+    } catch (err) {
+      console.error('[ai knowledge] delivery lexical retrieval failed:', err)
+    }
+  }
 
   // Semantic path.
-  if (config.embeddingsApiKey) {
+  if (config.embeddingsApiKey && picked.size < k) {
     try {
       const [queryEmbedding] = await embedTexts(config.embeddingsApiKey, [query])
       if (queryEmbedding) {
@@ -131,7 +200,7 @@ export async function retrieveKnowledge(
     try {
       const { data, error } = await db.rpc('match_ai_knowledge_fts', {
         p_account_id: accountId,
-        p_query: query,
+        p_query: lexicalQuery,
         p_match_count: k,
       })
       if (!error && Array.isArray(data)) {

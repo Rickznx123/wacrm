@@ -207,18 +207,21 @@ export async function dispatchInboundToAiReply(
       return
     }
 
+    const customerQuery = latestUserMessage(messages)
+
     // Ground the reply in the account's knowledge base (best-effort).
     const knowledge = await retrieveKnowledge(
       db,
       accountId,
       config,
-      latestUserMessage(messages),
+      customerQuery,
     )
 
     const systemPrompt = buildSystemPrompt({
       userPrompt: config.systemPrompt,
       mode: 'auto_reply',
       knowledge,
+      customerQuery,
     })
 
     const useTools = config.provider === 'openai' && pharmacyToolsAvailable()

@@ -1,4 +1,5 @@
 import type { AiProvider } from './types'
+import { buildDeliveryPolicySection } from './delivery-policy'
 
 // ============================================================
 // Tunables + prompt scaffold for the AI reply assistant.
@@ -54,8 +55,10 @@ export function buildSystemPrompt(args: {
   mode: 'draft' | 'auto_reply'
   /** Knowledge-base excerpts retrieved for the current question. */
   knowledge?: string[]
+  /** Most recent customer message used for retrieval intent. */
+  customerQuery?: string
 }): string {
-  const { userPrompt, mode, knowledge } = args
+  const { userPrompt, mode, knowledge, customerQuery } = args
   const parts: string[] = [
     'You are a customer-messaging assistant for a business that uses a WhatsApp CRM. ' +
       'You are shown the recent WhatsApp conversation between the business (assistant) and a customer (user). ' +
@@ -88,6 +91,13 @@ export function buildSystemPrompt(args: {
           .map((k, i) => `[${i + 1}] ${k}`)
           .join('\n\n---\n\n')}`,
     )
+  }
+
+  if (customerQuery) {
+    const deliveryPolicy = buildDeliveryPolicySection(customerQuery, knowledge)
+    if (deliveryPolicy) {
+      parts.push(deliveryPolicy)
+    }
   }
 
   return parts.join('\n\n')

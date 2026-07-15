@@ -95,17 +95,20 @@ export async function POST(request: Request) {
 
     // Ground the draft in the account's knowledge base (best-effort —
     // returns [] when there's no KB or retrieval fails).
+    const customerQuery = latestUserMessage(messages)
+
     const knowledge = await retrieveKnowledge(
       supabase,
       accountId,
       config,
-      latestUserMessage(messages),
+      customerQuery,
     )
 
     const systemPrompt = buildSystemPrompt({
       userPrompt: config.systemPrompt,
       mode: 'draft',
       knowledge,
+      customerQuery,
     })
 
     const { text, usage } = await generateReply({ config, systemPrompt, messages })

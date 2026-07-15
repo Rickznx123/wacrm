@@ -67,13 +67,19 @@ export async function executePharmacyTool(
 
   // Primeira tentativa: busca exatamente o que a IA pediu
   let data = await consultar(nome)
+  const extractTotal = (value: unknown): number | null => {
+    if (!value || typeof value !== 'object' || !('total' in value)) return null
+    const raw = (value as { total?: unknown }).total
+    const num = Number(raw)
+    return Number.isFinite(num) ? num : null
+  }
 
   // Se não encontrou nada, faz uma segunda busca simplificada
   if (
     typeof data === 'object' &&
     data &&
     'total' in data &&
-    Number((data as any).total) === 0
+    extractTotal(data) === 0
   ) {
     const buscaSimplificada = nome
       .replace(/\b\d+\s*(mg|ml|g)\b/gi, '')

@@ -72,16 +72,19 @@ export async function POST(request: Request) {
       )
     }
 
+    const customerQuery = latestUserMessage(messages)
+
     const knowledge = await retrieveKnowledge(
       supabase,
       accountId,
       config,
-      latestUserMessage(messages),
+      customerQuery,
     )
     const systemPrompt = buildSystemPrompt({
       userPrompt: config.systemPrompt,
       mode: 'auto_reply',
       knowledge,
+      customerQuery,
     })
 
     const { text, handoff } = await generateReply({ config, systemPrompt, messages })
