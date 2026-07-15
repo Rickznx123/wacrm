@@ -604,7 +604,7 @@ async function findOrCreateContact(
 async function findOrCreateConversation(accountId: string, ownerUserId: string, contactId: string) {
   const { data: existing } = await supabaseAdmin()
     .from('conversations')
-    .select('id, unread_count')
+    .select('id, unread_count, status')
     .eq('account_id', accountId)
     .eq('contact_id', contactId)
     .maybeSingle()
@@ -617,7 +617,7 @@ async function findOrCreateConversation(accountId: string, ownerUserId: string, 
       user_id: ownerUserId,
       contact_id: contactId,
     })
-    .select('id, unread_count')
+    .select('id, unread_count, status')
     .single()
 
   if (error || !data) return null
@@ -698,6 +698,36 @@ async function persistInboundMessage(
 
   if (!persisted) {
     return 'ok' as ProcessingResult
+  }
+
+  // Reopen a previously closed thread when a new customer message arrives.
+  // This UPDATE is app-driven (not only SQL-function-driven) so the webhook
+  // behavior is consistent even if DB migrations lag behind application deploys.
+  if (conv.row.status === 'closed') {
+    const { error: reopenErr } = await supabaseAdmin()
+      .from('conversations')
+      .update({
+        status: 'pending',
+        assigned_agent_id: null,
+        ai_handoff_summary: null,
+        ai_autoreply_disabled: false,
+        ai_reply_count: 0,
+        session_started_at: msg.timestampIso,
+        updated_at: new Date().toISOString(),
+      })
+      .eq('id', conv.row.id)
+
+    if (reopenErr) {
+      logStructured('error', 'conversation.reopen_failed', {
+        ...logCtx,
+        stage: 'conversations.reopen_on_inbound',
+        conversationId: conv.row.id,
+        ...sanitizeErrorContext(reopenErr),
+      })
+      return isTransientError(reopenErr)
+        ? ('transient_error' as ProcessingResult)
+        : ('permanent_error' as ProcessingResult)
+    }
   }
 
   if (conv.created) {

@@ -77,21 +77,10 @@ const createClientMock = vi.fn(() => {
       })
 
       if (conversationId === dbState.conversation.id) {
-        const wasClosed = dbState.conversation.status === 'closed'
         dbState.conversation = {
           ...dbState.conversation,
-          status: wasClosed ? 'pending' : dbState.conversation.status,
-          assigned_agent_id: wasClosed ? null : dbState.conversation.assigned_agent_id,
           unread_count: dbState.conversation.unread_count + 1,
           last_message_text: String(payload.p_last_message_text),
-          ai_autoreply_disabled: wasClosed
-            ? false
-            : dbState.conversation.ai_autoreply_disabled,
-          ai_reply_count: wasClosed ? 0 : dbState.conversation.ai_reply_count,
-          ai_handoff_summary: wasClosed ? null : dbState.conversation.ai_handoff_summary,
-          session_started_at: wasClosed
-            ? String(payload.p_created_at)
-            : dbState.conversation.session_started_at,
         }
         dbState.conversationUpdates += 1
       }
@@ -246,6 +235,7 @@ const createClientMock = vi.fn(() => {
                 ? {
                     id: dbState.conversation.id,
                     unread_count: dbState.conversation.unread_count,
+                    status: dbState.conversation.status,
                   }
                 : null,
               error: null,
