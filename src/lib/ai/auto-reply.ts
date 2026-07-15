@@ -11,6 +11,7 @@ import { engineSendText } from '@/lib/flows/meta-send'
 import { checkRateLimit, RATE_LIMITS } from '@/lib/rate-limit'
 import { resolveEvolutionProvider } from '@/integrations/registry'
 import { sanitizePhoneForMeta, isValidE164 } from '@/lib/whatsapp/phone-utils'
+import { getDeliveryFeeResponse } from '@/lib/delivery-fees'
 import { buscarProdutoTool, executePharmacyTool, pharmacyToolsAvailable } from './tools/buscar-produto'
 
 interface DispatchArgs {
@@ -208,6 +209,21 @@ export async function dispatchInboundToAiReply(
     }
 
     const customerQuery = latestUserMessage(messages)
+
+    const deliveryReply = getDeliveryFeeResponse(customerQuery)
+
+    if (deliveryReply) {
+      await sendAiReply({
+        accountId,
+        userId: configOwnerUserId,
+        conversationId,
+        contactId,
+        text: deliveryReply,
+        provider: channelProvider,
+      })
+
+      return
+    }
 
     // Ground the reply in the account's knowledge base (best-effort).
     const knowledge = await retrieveKnowledge(

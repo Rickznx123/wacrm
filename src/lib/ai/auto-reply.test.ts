@@ -120,6 +120,23 @@ describe('dispatchInboundToAiReply — eligibility gates', () => {
     expect(systemPrompt).toContain('Returns accepted within 30 days.')
   })
 
+  it('replies directly with local delivery fee when a neighborhood is detected', async () => {
+    h.buildConversationContext.mockResolvedValue([
+      { role: 'user', content: 'Qual a taxa de entrega para o bairro centro?' },
+    ])
+
+    await dispatchInboundToAiReply(ARGS)
+
+    expect(h.retrieveKnowledge).not.toHaveBeenCalled()
+    expect(h.generateReply).not.toHaveBeenCalled()
+    expect(h.engineSendText).toHaveBeenCalledWith(
+      expect.objectContaining({
+        conversationId: 'conv-1',
+        text: 'A taxa de entrega para CENTRO é R$ 8,00.',
+      }),
+    )
+  })
+
   it('stands down when an active message-level automation exists', async () => {
     h.state.autoResponders = [{ id: 'auto-1' }]
     await dispatchInboundToAiReply(ARGS)
