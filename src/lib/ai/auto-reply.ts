@@ -11,7 +11,12 @@ import { engineSendText } from '@/lib/flows/meta-send'
 import { checkRateLimit, RATE_LIMITS } from '@/lib/rate-limit'
 import { resolveEvolutionProvider } from '@/integrations/registry'
 import { sanitizePhoneForMeta, isValidE164 } from '@/lib/whatsapp/phone-utils'
-import { DELIVERY_FEES, extractNeighborhood, getDeliveryFeeResponse } from '@/lib/delivery-fees'
+import {
+  DELIVERY_FEES,
+  extractNeighborhood,
+  getDeliveryFeeResponse,
+  isDeliveryFeeQuestion,
+} from '@/lib/delivery-fees'
 import { buscarProdutoTool, executePharmacyTool, pharmacyToolsAvailable } from './tools/buscar-produto'
 
 interface DispatchArgs {
@@ -26,6 +31,46 @@ interface DispatchArgs {
   channelProvider?: 'meta' | 'evolution'
   /** Inbound whatsapp message id, when available from caller context. */
   inboundMessageId?: string | null
+}
+
+const DELIVERY_DATA_FIELD_RE =
+  /\b(?:nome|endere[cç]o|refer[eê]ncia|telefone|celular|whatsapp|n[uú]mero)\b/i
+
+const DELIVERY_DATA_REQUEST_RE =
+  /\b(?:informe|me\s+passe|passe|envie|preciso|necessito|mand[ea]|compartilhe|preencha)\b/i
+
+const CHECKOUT_STAGE_RE =
+  /\b(?:checkout|finalizar\s+(?:pedido|compra)|fechar\s+(?:pedido|compra)|confirmar\s+(?:pedido|compra)|dados\s+(?:de|para)\s+entrega|endere[cç]o\s+de\s+entrega)\b/i
+
+function getLastAssistantMessageBeforeLatestUser(messages: { role: 'user' | 'assistant'; content: string }[]): string | null {
+  for (let i = messages.length - 1; i >= 0; i--) {
+    if (messages[i].role !== 'user') continue
+    for (let j = i - 1; j >= 0; j--) {
+      if (messages[j].role === 'assistant') return messages[j].content
+    }
+    return null
+  }
+
+  for (let i = messages.length - 1; i >= 0; i--) {
+    if (messages[i].role === 'assistant') return messages[i].content
+  }
+
+  return null
+}
+
+function isDeliveryDataRequestMessage(message: string | null): boolean {
+  if (!message) return false
+  return DELIVERY_DATA_FIELD_RE.test(message) && DELIVERY_DATA_REQUEST_RE.test(message)
+}
+
+function isCheckoutStageConversation(messages: { role: 'user' | 'assistant'; content: string }[]): boolean {
+  const lastAssistant = getLastAssistantMessageBeforeLatestUser(messages)
+  if (isDeliveryDataRequestMessage(lastAssistant)) {
+    return true
+  }
+
+  const recent = messages.slice(-8).map((m) => m.content).join(' \n ')
+  return CHECKOUT_STAGE_RE.test(recent)
 }
 
 async function sendAiReply(
@@ -214,7 +259,21 @@ export async function dispatchInboundToAiReply(
     const bairro = extractNeighborhood(customerQuery)
     console.log('[DELIVERY] extractedNeighborhood:', bairro)
 
-    const deliveryReply = getDeliveryFeeResponse(customerQuery)
+    const inCheckoutStage = isCheckoutStageConversation(messages)
+
+    if (inCheckoutStage) {
+      console.log('[DELIVERY] motivo: conversa em etapa de checkout/coleta de dados de entrega.')
+    }
+
+    const shouldInterceptDeliveryFee = !inCheckoutStage && isDeliveryFeeQuestion(customerQuery)
+
+    if (!shouldInterceptDeliveryFee) {
+      console.log('[DELIVERY] motivo: mensagem sem intencao de consulta de taxa.')
+    }
+
+    const deliveryReply = shouldInterceptDeliveryFee
+      ? getDeliveryFeeResponse(customerQuery)
+      : null
     console.log('[DELIVERY] deliveryReply:', deliveryReply)
 
     if (!bairro) {

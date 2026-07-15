@@ -137,6 +137,30 @@ describe('dispatchInboundToAiReply — eligibility gates', () => {
     )
   })
 
+  it('does not intercept delivery fee during checkout data collection stage', async () => {
+    h.buildConversationContext.mockResolvedValue([
+      {
+        role: 'assistant',
+        content: 'Perfeito! Para fechar o pedido, me passe nome, endereço, referência e telefone.',
+      },
+      {
+        role: 'user',
+        content: 'Rickelmi Rua A19 Casa de esquina entrega no jardim europa 66992402445',
+      },
+    ])
+
+    await dispatchInboundToAiReply(ARGS)
+
+    expect(h.retrieveKnowledge).toHaveBeenCalled()
+    expect(h.generateReply).toHaveBeenCalled()
+    expect(h.engineSendText).toHaveBeenCalledWith(
+      expect.objectContaining({
+        conversationId: 'conv-1',
+        text: 'Hello!',
+      }),
+    )
+  })
+
   it('stands down when an active message-level automation exists', async () => {
     h.state.autoResponders = [{ id: 'auto-1' }]
     await dispatchInboundToAiReply(ARGS)

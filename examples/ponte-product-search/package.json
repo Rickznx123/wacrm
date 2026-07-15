@@ -1,0 +1,12 @@
+{
+  "name": "ponte-product-search-example",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "start": "node server.mjs",
+    "test": "node --test product-search.test.mjs handler.test.mjs"
+  },
+  "dependencies": {
+    "mssql": "^11.0.1"
+  }
+}

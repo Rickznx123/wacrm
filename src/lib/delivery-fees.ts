@@ -117,6 +117,9 @@ export const DELIVERY_FEES: Record<string, number> = {
 const LOCATION_MARKERS_RE =
   /\b(?:bairro|setor|setores|regiao|regiao de|regiao do|regiao da|na|no|em|para|pro|pra)\s+([\p{L}0-9][\p{L}0-9\s\-]{1,60})/giu
 
+const DELIVERY_FEE_QUESTION_RE =
+  /\b(?:taxa|entrega|frete|valor\s+da\s+entrega|quanto\s+fica|quanto\s+custa|qual\s+o\s+valor|pre[cç]o\s+da\s+entrega)\b/i
+
 function normalize(value: string): string {
   return value
     .normalize('NFD')
@@ -229,4 +232,8 @@ export function getDeliveryFeeResponse(message: string): string | null {
   })
 
   return `A taxa de entrega para ${neighborhood} é R$ ${feeFormatted}.`
+}
+
+export function isDeliveryFeeQuestion(message: string): boolean {
+  return DELIVERY_FEE_QUESTION_RE.test(message.trim())
 }
