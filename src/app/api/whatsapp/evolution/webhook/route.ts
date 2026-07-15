@@ -704,7 +704,15 @@ async function persistInboundMessage(
   // This UPDATE is app-driven (not only SQL-function-driven) so the webhook
   // behavior is consistent even if DB migrations lag behind application deploys.
   if (conv.row.status === 'closed') {
-    const { error: reopenErr } = await supabaseAdmin()
+    logStructured('info', 'conversation.reopen_attempt', {
+      ...logCtx,
+      stage: 'conversations.reopen_on_inbound',
+      conversationId: conv.row.id,
+      statusBeforeInbound: conv.row.status,
+      messageId: msg.messageId,
+    })
+
+    const { data: reopenRows, error: reopenErr } = await supabaseAdmin()
       .from('conversations')
       .update({
         status: 'pending',
@@ -716,6 +724,24 @@ async function persistInboundMessage(
         updated_at: new Date().toISOString(),
       })
       .eq('id', conv.row.id)
+      .select('id, status')
+
+    const affectedRows = Array.isArray(reopenRows) ? reopenRows.length : 0
+    const statusAfterInbound =
+      Array.isArray(reopenRows) && reopenRows.length > 0
+        ? String(reopenRows[0]?.status ?? '')
+        : null
+
+    logStructured(reopenErr ? 'error' : 'info', 'conversation.reopen_result', {
+      ...logCtx,
+      stage: 'conversations.reopen_on_inbound',
+      conversationId: conv.row.id,
+      statusBeforeInbound: conv.row.status,
+      statusAfterInbound,
+      updateResult: reopenErr ? 'error' : 'ok',
+      affectedRows,
+      ...(reopenErr ? sanitizeErrorContext(reopenErr) : {}),
+    })
 
     if (reopenErr) {
       logStructured('error', 'conversation.reopen_failed', {
