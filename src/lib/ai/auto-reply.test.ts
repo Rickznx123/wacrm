@@ -108,28 +108,22 @@ beforeEach(() => {
 })
 
 describe('dispatchInboundToAiReply — eligibility gates', () => {
-  it('claims a slot and sends on the happy path', async () => {
+  it('sends the temporary maintenance message and exits early', async () => {
     await dispatchInboundToAiReply(ARGS)
-    expect(h.state.rpcCalls).toEqual([
-      {
-        name: 'claim_ai_reply_slot',
-        args: { conversation_id: 'conv-1', max_replies: 3 },
-      },
-    ])
+
+    expect(h.state.rpcCalls).toHaveLength(0)
+    expect(h.retrieveKnowledge).not.toHaveBeenCalled()
+    expect(h.generateReply).not.toHaveBeenCalled()
+    expect(h.state.updatePayload).toBeNull()
     expect(h.engineSendText).toHaveBeenCalledWith(
-      expect.objectContaining({ conversationId: 'conv-1', text: 'Hello!' }),
+      expect.objectContaining({
+        conversationId: 'conv-1',
+        text: 'Olá! 👋 Seja bem-vindo(a) à nossa farmácia. Recebemos sua mensagem e, em instantes, um de nossos atendentes fará seu atendimento. Agradecemos pela preferência! 💙',
+      }),
     )
   })
 
-  it('grounds the reply in retrieved knowledge', async () => {
-    h.retrieveKnowledge.mockResolvedValue(['Returns accepted within 30 days.'])
-    await dispatchInboundToAiReply(ARGS)
-    expect(h.retrieveKnowledge).toHaveBeenCalled()
-    const systemPrompt = h.generateReply.mock.calls[0][0].systemPrompt as string
-    expect(systemPrompt).toContain('Returns accepted within 30 days.')
-  })
-
-  it('replies directly with local delivery fee when a neighborhood is detected', async () => {
+  it('does not run knowledge, tools or delivery intercept while paused', async () => {
     h.buildConversationContext.mockResolvedValue([
       { role: 'user', content: 'Qual a taxa de entrega para o bairro centro?' },
     ])
@@ -138,39 +132,17 @@ describe('dispatchInboundToAiReply — eligibility gates', () => {
 
     expect(h.retrieveKnowledge).not.toHaveBeenCalled()
     expect(h.generateReply).not.toHaveBeenCalled()
+    expect(h.state.updatePayload).toBeNull()
+    expect(h.state.rpcCalls).toHaveLength(0)
     expect(h.engineSendText).toHaveBeenCalledWith(
       expect.objectContaining({
         conversationId: 'conv-1',
-        text: 'A taxa de entrega para CENTRO é R$ 8,00.',
+        text: 'Olá! 👋 Seja bem-vindo(a) à nossa farmácia. Recebemos sua mensagem e, em instantes, um de nossos atendentes fará seu atendimento. Agradecemos pela preferência! 💙',
       }),
     )
   })
 
-  it('does not intercept delivery fee during checkout data collection stage', async () => {
-    h.buildConversationContext.mockResolvedValue([
-      {
-        role: 'assistant',
-        content: 'Perfeito! Para fechar o pedido, me passe nome, endereço, referência e telefone.',
-      },
-      {
-        role: 'user',
-        content: 'Rickelmi Rua A19 Casa de esquina entrega no jardim europa 66992402445',
-      },
-    ])
-
-    await dispatchInboundToAiReply(ARGS)
-
-    expect(h.retrieveKnowledge).toHaveBeenCalled()
-    expect(h.generateReply).toHaveBeenCalled()
-    expect(h.engineSendText).toHaveBeenCalledWith(
-      expect.objectContaining({
-        conversationId: 'conv-1',
-        text: 'Hello!',
-      }),
-    )
-  })
-
-  it('triggers immediate handoff on medication recommendation intent', async () => {
+  it('does not run handoff flow while paused', async () => {
     h.buildConversationContext.mockResolvedValue([
       { role: 'user', content: 'Estou com dor de cabeça' },
     ])
@@ -179,10 +151,14 @@ describe('dispatchInboundToAiReply — eligibility gates', () => {
 
     expect(h.retrieveKnowledge).not.toHaveBeenCalled()
     expect(h.generateReply).not.toHaveBeenCalled()
-    expect(h.engineSendText).not.toHaveBeenCalled()
+    expect(h.state.updatePayload).toBeNull()
     expect(h.state.rpcCalls).toHaveLength(0)
-    expect(h.state.updatePayload).toMatchObject({ ai_autoreply_disabled: true })
-    expect(h.state.updatePayload?.ai_handoff_summary).toContain('🛒 NOVO PEDIDO')
+    expect(h.engineSendText).toHaveBeenCalledWith(
+      expect.objectContaining({
+        conversationId: 'conv-1',
+        text: 'Olá! 👋 Seja bem-vindo(a) à nossa farmácia. Recebemos sua mensagem e, em instantes, um de nossos atendentes fará seu atendimento. Agradecemos pela preferência! 💙',
+      }),
+    )
   })
 
   it('stands down when an active message-level automation exists', async () => {
@@ -195,9 +171,9 @@ describe('dispatchInboundToAiReply — eligibility gates', () => {
   it('does not send when the atomic slot claim loses the race', async () => {
     h.state.claim = false
     await dispatchInboundToAiReply(ARGS)
-    // It still attempts the claim, but the send is skipped.
-    expect(h.state.rpcCalls).toHaveLength(1)
-    expect(h.engineSendText).not.toHaveBeenCalled()
+    // In pause mode we return before slot-claim logic.
+    expect(h.state.rpcCalls).toHaveLength(0)
+    expect(h.engineSendText).toHaveBeenCalledTimes(1)
   })
 
   it('skips when AI is off / not configured', async () => {
@@ -252,26 +228,19 @@ describe('dispatchInboundToAiReply — eligibility gates', () => {
 })
 
 describe('dispatchInboundToAiReply — handoff', () => {
-  it('disables auto-reply, writes a summary, and does not send on handoff', async () => {
+  it('does not enter handoff mode while pause flag is active', async () => {
     h.generateReply.mockResolvedValue({ text: '', handoff: true })
     await dispatchInboundToAiReply(ARGS)
-    expect(h.engineSendText).not.toHaveBeenCalled()
+    expect(h.engineSendText).toHaveBeenCalledTimes(1)
     expect(h.state.rpcCalls).toHaveLength(0)
-    expect(h.state.updatePayload).toMatchObject({ ai_autoreply_disabled: true })
-    expect(h.state.updatePayload?.ai_handoff_summary).toContain(
-      '🛒 NOVO PEDIDO',
-    )
-    // No handoff target configured → conversation left unassigned.
-    expect(h.state.updatePayload).not.toHaveProperty('assigned_agent_id')
+    expect(h.state.updatePayload).toBeNull()
   })
 
-  it('routes to the configured handoff agent on handoff', async () => {
+  it('does not assign handoff agent while pause flag is active', async () => {
     h.loadAiConfig.mockResolvedValue(aiConfig({ handoffAgentId: 'agent-7' }))
     h.generateReply.mockResolvedValue({ text: '', handoff: true })
     await dispatchInboundToAiReply(ARGS)
-    expect(h.state.updatePayload).toMatchObject({
-      ai_autoreply_disabled: true,
-      assigned_agent_id: 'agent-7',
-    })
+    expect(h.state.updatePayload).toBeNull()
+    expect(h.engineSendText).toHaveBeenCalledTimes(1)
   })
 })

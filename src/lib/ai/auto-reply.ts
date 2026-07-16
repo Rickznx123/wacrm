@@ -34,6 +34,11 @@ interface DispatchArgs {
   inboundMessageId?: string | null
 }
 
+const PAUSE_AI_AUTOREPLY = true
+
+const PAUSE_AI_AUTOREPLY_MESSAGE =
+  'Olá! 👋 Seja bem-vindo(a) à nossa farmácia. Recebemos sua mensagem e, em instantes, um de nossos atendentes fará seu atendimento. Agradecemos pela preferência! 💙'
+
 const DELIVERY_DATA_FIELD_RE =
   /\b(?:nome|endere[cç]o|refer[eê]ncia|telefone|celular|whatsapp|n[uú]mero)\b/i
 
@@ -256,6 +261,18 @@ export async function dispatchInboundToAiReply(
 
     const customerQuery = latestUserMessage(messages)
     console.log('[DELIVERY] customerQuery:', customerQuery)
+
+    if (PAUSE_AI_AUTOREPLY) {
+      await sendAiReply({
+        accountId,
+        userId: configOwnerUserId,
+        conversationId,
+        contactId,
+        text: PAUSE_AI_AUTOREPLY_MESSAGE,
+        provider: channelProvider,
+      })
+      return
+    }
 
     const triggerExistingHandoffFlow = async () => {
       let contactPhone: string | null = null
