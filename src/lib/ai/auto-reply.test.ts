@@ -10,6 +10,7 @@ const h = vi.hoisted(() => ({
   engineSendText: vi.fn(),
   state: {
     conv: null as Record<string, unknown> | null,
+    contact: { phone: '+5566999999999' } as { phone: string } | null,
     autoResponders: [] as { id: string }[],
     claim: true as boolean,
     updatePayload: null as Record<string, unknown> | null,
@@ -33,6 +34,14 @@ vi.mock('./admin-client', () => ({
           in: () => chain,
           limit: () =>
             Promise.resolve({ data: h.state.autoResponders, error: null }),
+        }
+        return chain
+      }
+      if (table === 'contacts') {
+        const chain = {
+          select: () => chain,
+          eq: () => chain,
+          maybeSingle: () => Promise.resolve({ data: h.state.contact, error: null }),
         }
         return chain
       }
@@ -161,6 +170,21 @@ describe('dispatchInboundToAiReply — eligibility gates', () => {
     )
   })
 
+  it('triggers immediate handoff on medication recommendation intent', async () => {
+    h.buildConversationContext.mockResolvedValue([
+      { role: 'user', content: 'Estou com dor de cabeça' },
+    ])
+
+    await dispatchInboundToAiReply(ARGS)
+
+    expect(h.retrieveKnowledge).not.toHaveBeenCalled()
+    expect(h.generateReply).not.toHaveBeenCalled()
+    expect(h.engineSendText).not.toHaveBeenCalled()
+    expect(h.state.rpcCalls).toHaveLength(0)
+    expect(h.state.updatePayload).toMatchObject({ ai_autoreply_disabled: true })
+    expect(h.state.updatePayload?.ai_handoff_summary).toContain('🛒 NOVO PEDIDO')
+  })
+
   it('stands down when an active message-level automation exists', async () => {
     h.state.autoResponders = [{ id: 'auto-1' }]
     await dispatchInboundToAiReply(ARGS)
@@ -235,7 +259,7 @@ describe('dispatchInboundToAiReply — handoff', () => {
     expect(h.state.rpcCalls).toHaveLength(0)
     expect(h.state.updatePayload).toMatchObject({ ai_autoreply_disabled: true })
     expect(h.state.updatePayload?.ai_handoff_summary).toContain(
-      'AI agent handed off',
+      '🛒 NOVO PEDIDO',
     )
     // No handoff target configured → conversation left unassigned.
     expect(h.state.updatePayload).not.toHaveProperty('assigned_agent_id')

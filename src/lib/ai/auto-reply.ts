@@ -18,6 +18,7 @@ import {
   isDeliveryFeeQuestion,
 } from '@/lib/delivery-fees'
 import { buscarProdutoTool, executePharmacyTool, pharmacyToolsAvailable } from './tools/buscar-produto'
+import { shouldHandoffMedicationRecommendation } from './medication-guardrail'
 
 interface DispatchArgs {
   /** Tenancy key — drives config, contact, and whatsapp_config lookups. */
@@ -256,6 +257,40 @@ export async function dispatchInboundToAiReply(
     const customerQuery = latestUserMessage(messages)
     console.log('[DELIVERY] customerQuery:', customerQuery)
 
+    const triggerExistingHandoffFlow = async () => {
+      let contactPhone: string | null = null
+      const { data: contactRow } = await db
+        .from('contacts')
+        .select('phone')
+        .eq('id', contactId)
+        .eq('account_id', accountId)
+        .maybeSingle()
+      if (contactRow && typeof (contactRow as { phone?: unknown }).phone === 'string') {
+        contactPhone = (contactRow as { phone: string }).phone
+      }
+
+      const summary = buildHandoffSummary({
+        messages,
+        replyCount: conv.ai_reply_count ?? 0,
+        contactPhone,
+      })
+      const update: Record<string, unknown> = {
+        ai_autoreply_disabled: true,
+        ai_handoff_summary: summary,
+      }
+      // Only set the assignee when a target is configured AND the thread
+      // isn't already owned — never stomp an existing human assignment.
+      if (config.handoffAgentId && !conv.assigned_agent_id) {
+        update.assigned_agent_id = config.handoffAgentId
+      }
+      await db.from('conversations').update(update).eq('id', conversationId)
+    }
+
+    if (shouldHandoffMedicationRecommendation(customerQuery)) {
+      await triggerExistingHandoffFlow()
+      return
+    }
+
     const bairro = extractNeighborhood(customerQuery)
     console.log('[DELIVERY] extractedNeighborhood:', bairro)
 
@@ -342,20 +377,7 @@ export async function dispatchInboundToAiReply(
       // and (c) leave a short internal note so whoever picks it up has
       // context. Assigning fires the `on_conversation_assigned` trigger,
       // which notifies the agent.
-      const summary = buildHandoffSummary({
-        messages,
-        replyCount: conv.ai_reply_count ?? 0,
-      })
-      const update: Record<string, unknown> = {
-        ai_autoreply_disabled: true,
-        ai_handoff_summary: summary,
-      }
-      // Only set the assignee when a target is configured AND the thread
-      // isn't already owned — never stomp an existing human assignment.
-      if (config.handoffAgentId && !conv.assigned_agent_id) {
-        update.assigned_agent_id = config.handoffAgentId
-      }
-      await db.from('conversations').update(update).eq('id', conversationId)
+      await triggerExistingHandoffFlow()
       return
     }
 
