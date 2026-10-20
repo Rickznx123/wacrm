@@ -13,7 +13,11 @@ function createInstanceId(accountId: string) {
 }
 
 function resolveWebhookUrl(request: Request) {
-  const origin = new URL(request.url).origin
+  // Behind a reverse proxy request.url can carry the container's internal
+  // origin, so prefer the canonical public URL when it is configured.
+  const origin =
+    process.env.NEXT_PUBLIC_SITE_URL?.trim().replace(/\/+$/, '') ||
+    new URL(request.url).origin
   return `${origin}/api/whatsapp/evolution/webhook`
 }
 

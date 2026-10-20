@@ -81,6 +81,9 @@ const SECURITY_HEADERS = [
 ] as const;
 
 const nextConfig: NextConfig = {
+  // Self-contained server bundle for the Docker image (ignored by Vercel).
+  output: "standalone",
+
   /**
    * Cache-Control policy.
    *

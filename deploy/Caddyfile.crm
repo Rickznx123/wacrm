@@ -1,0 +1,12 @@
+# Bloco a ACRESCENTAR ao final de /opt/evolution/Caddyfile (não substitui nada).
+# Caddy emite o certificado sozinho quando o DNS de crm.ascentstudio.com.br
+# aponta para a VPS e as portas 80/443 estão abertas.
+# reverse_proxy já envia X-Forwarded-For / -Proto / -Host e preserva o Host.
+#
+# "wacrm:3000" funciona se o Caddy roda em contêiner na rede evolution_default.
+# Se o Caddy roda direto no host (systemd), troque por 127.0.0.1:3000.
+
+crm.ascentstudio.com.br {
+	encode zstd gzip
+	reverse_proxy wacrm:3000
+}

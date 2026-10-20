@@ -1,0 +1,20 @@
+# Never send secrets or local state into the build context
+.env*
+!.env.production.example
+.git
+.github
+.next
+node_modules
+coverage
+*.log
+*.tsbuildinfo
+.vercel
+supabase/.temp
+
+# Not part of the web app image
+mcp-server
+docs
+examples
+Dockerfile
+compose.yaml
+deploy

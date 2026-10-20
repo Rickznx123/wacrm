@@ -1,0 +1,80 @@
+# CRM on the Hostinger VPS. Lives in /opt/wacrm, separate from /opt/evolution:
+# `docker compose` here never touches the Evolution / Postgres / Redis / Caddy
+# containers — it only joins their existing network.
+#
+#   docker compose build && docker compose up -d
+#
+# `.env` (same folder) feeds both the build args (compose interpolation) and the
+# runtime environment (env_file). Template: .env.production.example
+
+name: wacrm
+
+x-logging: &logging
+  driver: json-file
+  options:
+    max-size: "10m"
+    max-file: "5"
+
+services:
+  wacrm:
+    build:
+      context: .
+      args:
+        NEXT_PUBLIC_SUPABASE_URL: ${NEXT_PUBLIC_SUPABASE_URL:?set in .env}
+        NEXT_PUBLIC_SUPABASE_ANON_KEY: ${NEXT_PUBLIC_SUPABASE_ANON_KEY:?set in .env}
+        NEXT_PUBLIC_SITE_URL: ${NEXT_PUBLIC_SITE_URL:?set in .env}
+        NEXT_PUBLIC_APP_LOCALE: ${NEXT_PUBLIC_APP_LOCALE:-pt}
+    image: wacrm:latest
+    container_name: wacrm
+    restart: unless-stopped
+    env_file: .env
+    # Caddy reaches the app as wacrm:3000 over evolution_default. The loopback
+    # port is only for curl checks from the VPS shell; it is not public.
+    ports:
+      - "127.0.0.1:3000:3000"
+    networks:
+      - evolution_default
+    healthcheck:
+      test: ["CMD", "wget", "-q", "-O", "/dev/null", "http://127.0.0.1:3000/api/health"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 20s
+    # Not read_only: Next writes its image/ISR cache under /app/.next at runtime.
+    security_opt:
+      - no-new-privileges:true
+    cap_drop: [ALL]
+    logging: *logging
+
+  # Drains automation "wait" steps and sweeps stale flow runs. Vercel never ran
+  # these (the repo has no vercel.json crons), so this is the first scheduler.
+  cron:
+    image: wacrm:latest
+    container_name: wacrm-cron
+    restart: unless-stopped
+    depends_on:
+      wacrm:
+        condition: service_healthy
+    environment:
+      AUTOMATION_CRON_SECRET: ${AUTOMATION_CRON_SECRET:?set in .env}
+    entrypoint: ["/bin/sh", "-c"]
+    command:
+      - |
+        while true; do
+          for p in automations flows; do
+            wget -q -O /dev/null --header "x-cron-secret: $$AUTOMATION_CRON_SECRET" "http://wacrm:3000/api/$$p/cron" \
+              || echo "cron $$p failed at $$(date -Iseconds)"
+          done
+          sleep 60
+        done
+    networks:
+      - evolution_default
+    read_only: true
+    security_opt:
+      - no-new-privileges:true
+    cap_drop: [ALL]
+    logging: *logging
+
+networks:
+  evolution_default:
+    external: true
