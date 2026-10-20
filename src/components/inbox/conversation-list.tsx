@@ -22,6 +22,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
 interface ConversationListProps {
   activeConversationId: string | null;
@@ -500,17 +501,14 @@ function ConversationItem({
       )}
     >
       {/* Avatar */}
-      <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-white/15 bg-[linear-gradient(160deg,rgba(123,97,255,0.22),rgba(255,255,255,0.06))] text-sm font-semibold text-[var(--ascent-title)] shadow-[0_8px_18px_rgba(16,18,38,0.35)]">
+      <Avatar className="size-10 shrink-0 border border-white/15 shadow-[0_8px_18px_rgba(16,18,38,0.35)]">
         {contact?.avatar_url ? (
-          <img
-            src={contact.avatar_url}
-            alt={displayName}
-            className="h-10 w-10 rounded-full object-cover"
-          />
-        ) : (
-          initials
-        )}
-      </div>
+          <AvatarImage src={contact.avatar_url} alt={displayName} />
+        ) : null}
+        <AvatarFallback className="bg-[linear-gradient(160deg,rgba(123,97,255,0.22),rgba(255,255,255,0.06))] text-sm font-semibold text-[var(--ascent-title)]">
+          {initials}
+        </AvatarFallback>
+      </Avatar>
 
       {/* Content */}
       <div className="min-w-0 flex-1">

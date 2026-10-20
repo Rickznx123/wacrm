@@ -308,6 +308,18 @@ export const evolutionProvider: EvolutionProvider = {
     return mapState(instanceId, payload)
   },
 
+  async fetchProfilePicture(instanceId, phone) {
+    const payload = await evolutionFetch(`/chat/fetchProfilePictureUrl/${instanceId}`, {
+      method: 'POST',
+      timeoutMs: 5000,
+      body: { number: phone.replace(/\D/g, '') },
+    })
+    const obj = payload && typeof payload === 'object' ? (payload as Record<string, unknown>) : {}
+    return typeof obj.profilePictureUrl === 'string' && obj.profilePictureUrl
+      ? obj.profilePictureUrl
+      : null
+  },
+
   async disconnect(instanceId) {
     await evolutionFetch(`/instance/logout/${instanceId}`, {
       method: 'DELETE',

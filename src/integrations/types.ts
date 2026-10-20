@@ -20,6 +20,7 @@ export interface EvolutionProvider extends WhatsAppProvider {
     Array<{ phone: string; name: string | null; profilePicUrl?: string | null }>
   >
   readState(instanceId: string): Promise<ChannelState>
+  fetchProfilePicture(instanceId: string, phone: string): Promise<string | null>
   disconnect(instanceId: string): Promise<void>
   sendText(instanceId: string, to: string, text: string): Promise<{ messageId: string }>
   sendMedia(

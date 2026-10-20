@@ -588,7 +588,7 @@ async function findOrCreateContact(
       name: name || phone,
       avatar_url: profilePicUrl,
     })
-    .select('id, phone, name')
+    .select('id, phone, name, avatar_url')
     .single()
 
   if (error) {
@@ -630,6 +630,7 @@ async function persistInboundMessage(
   ownerUserId: string,
   msg: ParsedInboundMessage,
   logCtx: WebhookLogContext,
+  instanceId: string | null = null,
 ) {
   const contactOutcome = await findOrCreateContact(
     accountId,
@@ -641,6 +642,26 @@ async function persistInboundMessage(
   if (!contactOutcome) return 'permanent_error' as ProcessingResult
 
   const contact = contactOutcome.contact
+
+  // Message payloads rarely carry the photo; fetch it once per contact.
+  // shortcut: contacts with a private photo are re-queried on every message, cache a miss if that gets noisy.
+  if (instanceId && !msg.profilePicUrl && !contact.avatar_url) {
+    try {
+      const avatarUrl = await resolveEvolutionProvider().fetchProfilePicture(instanceId, msg.phone)
+      if (avatarUrl) {
+        await supabaseAdmin()
+          .from('contacts')
+          .update({ avatar_url: avatarUrl, updated_at: new Date().toISOString() })
+          .eq('id', contact.id)
+      }
+    } catch (avatarErr) {
+      logStructured('warn', 'contact.avatar_fetch_failed', {
+        ...logCtx,
+        contactId: contact.id,
+        ...sanitizeErrorContext(avatarErr),
+      })
+    }
+  }
   if (contactOutcome.wasCreated) {
     try {
       await attachAutoNewLeadTag(supabaseAdmin(), {
@@ -1020,7 +1041,7 @@ export async function POST(request: Request) {
     const inbound = parseInboundMessages(root)
     for (const msg of inbound) {
       const enriched = await enrichInboundMediaUrl(msg, parsed.instanceId, accountId, logCtx)
-      const result = await persistInboundMessage(accountId, ownerUserId, enriched, logCtx)
+      const result = await persistInboundMessage(accountId, ownerUserId, enriched, logCtx, parsed.instanceId)
       if (result === 'transient_error') hasTransientError = true
     }
 

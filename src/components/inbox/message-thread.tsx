@@ -31,6 +31,7 @@ import {
 import { format, isToday, isYesterday, differenceInHours } from "date-fns";
 import { useTranslations } from "next-intl";
 import { Badge } from "@/components/ui/badge";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -897,9 +898,14 @@ export function MessageThread({
               <ArrowLeft className="h-5 w-5" />
             </button>
           )}
-          <div className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full border border-white/15 bg-[linear-gradient(150deg,rgba(123,97,255,0.26),rgba(255,255,255,0.08))] text-sm font-semibold text-[var(--ascent-title)] shadow-[0_8px_18px_rgba(14,16,36,0.34)]">
-            {displayName.charAt(0).toUpperCase()}
-          </div>
+          <Avatar className="size-9 flex-shrink-0 border border-white/15 shadow-[0_8px_18px_rgba(14,16,36,0.34)]">
+            {contact.avatar_url ? (
+              <AvatarImage src={contact.avatar_url} alt={displayName} />
+            ) : null}
+            <AvatarFallback className="bg-[linear-gradient(150deg,rgba(123,97,255,0.26),rgba(255,255,255,0.08))] text-sm font-semibold text-[var(--ascent-title)]">
+              {displayName.charAt(0).toUpperCase()}
+            </AvatarFallback>
+          </Avatar>
           <div className="min-w-0">
             <h2 className="truncate text-[14px] font-semibold tracking-[0.01em] text-[var(--ascent-title)]">{displayName}</h2>
             <p className="truncate text-xs text-[var(--ascent-subtle)]">{contact.phone}</p>
