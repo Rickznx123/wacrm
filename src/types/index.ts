@@ -183,6 +183,8 @@ export interface Conversation {
   ai_handoff_summary?: string | null;
   /** Logical start of the current active service cycle. */
   session_started_at?: string | null;
+  /** Set when the account switched WhatsApp numbers; hidden from the inbox (migration 044). */
+  archived_at?: string | null;
 }
 
 // ============================================================

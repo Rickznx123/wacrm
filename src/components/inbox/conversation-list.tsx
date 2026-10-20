@@ -162,11 +162,14 @@ export function ConversationList({
   }, [tags]);
 
   const filtered = useMemo(() => {
-    let result = conversations;
+    // Conversations from a previously linked number never show up.
+    let result = conversations.filter((c) => !c.archived_at);
 
-    if (statusTab !== "all") {
-      result = result.filter((c) => c.status === statusTab);
-    }
+    // Finished conversations leave the main queue; only the "closed" tab shows them.
+    result =
+      statusTab === "all"
+        ? result.filter((c) => c.status !== "closed")
+        : result.filter((c) => c.status === statusTab);
 
     if (unreadOnly) {
       result = result.filter((c) => c.unread_count > 0);

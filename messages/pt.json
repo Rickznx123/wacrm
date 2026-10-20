@@ -160,6 +160,8 @@
       "statusOpen": "Aberta",
       "statusPending": "Pendente",
       "statusClosed": "Fechada",
+      "startService": "Iniciar atendimento",
+      "finishService": "Finalizar",
       "assign": "Atribuir",
       "assigned": "Atribuído",
       "unassign": "Desatribuir",

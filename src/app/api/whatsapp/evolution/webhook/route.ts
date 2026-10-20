@@ -616,6 +616,7 @@ async function findOrCreateConversation(accountId: string, ownerUserId: string, 
       account_id: accountId,
       user_id: ownerUserId,
       contact_id: contactId,
+      status: 'pending',
     })
     .select('id, unread_count, status')
     .single()

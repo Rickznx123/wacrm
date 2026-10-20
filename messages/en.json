@@ -160,6 +160,8 @@
       "statusOpen": "Open",
       "statusPending": "Pending",
       "statusClosed": "Closed",
+      "startService": "Start service",
+      "finishService": "Finish",
       "assign": "Assign",
       "assigned": "Assigned",
       "unassign": "Unassign",

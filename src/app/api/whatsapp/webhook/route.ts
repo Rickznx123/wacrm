@@ -1105,6 +1105,7 @@ async function findOrCreateConversation(
       account_id: accountId,
       user_id: configOwnerUserId,
       contact_id: contactId,
+      status: 'pending',
     })
     .select()
     .single()

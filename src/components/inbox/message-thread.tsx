@@ -136,12 +136,6 @@ function groupMessagesByDate(messages: Message[]) {
   return groups;
 }
 
-const STATUS_OPTIONS: { label: string; value: ConversationStatus; color: string }[] = [
-  { label: "Open", value: "open", color: "text-primary" },
-  { label: "Pending", value: "pending", color: "text-amber-400" },
-  { label: "Closed", value: "closed", color: "text-muted-foreground" },
-];
-
 const THREAD_SURFACE = "bg-[linear-gradient(180deg,rgba(123,97,255,0.06),rgba(255,255,255,0.015)_26%,rgba(13,14,20,0.42))] backdrop-blur-[6px]";
 
 export function MessageThread({
@@ -257,6 +251,7 @@ export function MessageThread({
   });
 
   const conversationId = conversation?.id;
+  const sessionStartedAt = conversation?.session_started_at ?? null;
   const hasUnread = (conversation?.unread_count ?? 0) > 0;
 
   // Fetch messages whenever the selected conversation changes. Kept
@@ -272,11 +267,13 @@ export function MessageThread({
     (async () => {
       setLoading(true);
 
-      const { data, error } = await supabase
+      // Only the current service cycle: a reopened conversation starts empty.
+      let query = supabase
         .from("messages")
         .select("*")
-        .eq("conversation_id", conversationId)
-        .order("created_at", { ascending: true });
+        .eq("conversation_id", conversationId);
+      if (sessionStartedAt) query = query.gte("created_at", sessionStartedAt);
+      const { data, error } = await query.order("created_at", { ascending: true });
 
       if (cancelled) return;
 
@@ -296,7 +293,7 @@ export function MessageThread({
     // the realtime channel reconnects or the tab regains focus —
     // realtime is best-effort and any message events sent while the WS
     // was disconnected or throttled are otherwise lost.
-  }, [conversationId, resyncToken]);
+  }, [conversationId, sessionStartedAt, resyncToken]);
 
   // Reactions fetch — pulls the current state from the DB. Kept separate
   // from the channel subscription below so a `resyncToken` bump just
@@ -627,6 +624,26 @@ export function MessageThread({
     [conversation, onStatusChange]
   );
 
+  // Starting service takes the conversation: in service + assigned to me.
+  const handleStartService = useCallback(async () => {
+    if (!conversation || !user?.id) return;
+
+    const supabase = createClient();
+    const { error } = await supabase
+      .from("conversations")
+      .update({ status: "open", assigned_agent_id: user.id })
+      .eq("id", conversation.id);
+
+    if (error) {
+      console.error("Failed to start service:", error);
+      toast.error("Failed to start service");
+      return;
+    }
+
+    onStatusChange(conversation.id, "open");
+    onAssignChange(conversation.id, user.id);
+  }, [conversation, user?.id, onStatusChange, onAssignChange]);
+
   const handleOpenTemplates = useCallback(() => {
     setTemplateModalOpen(true);
   }, []);
@@ -850,9 +867,6 @@ export function MessageThread({
 
   const displayName = contact.name || contact.phone;
   const messageGroups = groupMessagesByDate(messages);
-  const currentStatus = STATUS_OPTIONS.find(
-    (s) => s.value === conversation.status
-  );
   const assignedAgentId = conversation.assigned_agent_id ?? null;
   const currentAssignee = profiles.find((p) => p.user_id === assignedAgentId);
   const assignLabel = assignedAgentId
@@ -954,30 +968,23 @@ export function MessageThread({
             </button>
           )}
 
-          {/* Status dropdown */}
-          <DropdownMenu>
-            <DropdownMenuTrigger className={cn(
-              "inline-flex items-center justify-center h-7 gap-1 rounded-lg border border-white/12 bg-white/[0.03] px-2 text-xs hover:border-[#9f8cff]/40 hover:bg-[#7B61FF]/10",
-                  currentStatus?.color ?? "text-muted-foreground"
-                )}>
-                {currentStatus ? t(`status${currentStatus.label}`) : t("status")}
-                <ChevronDown className="h-3 w-3" />
-            </DropdownMenuTrigger>
-            <DropdownMenuContent
-              align="end"
-              className="border-white/15 bg-[rgba(20,18,34,0.95)] backdrop-blur"
-            >
-              {STATUS_OPTIONS.map((opt) => (
-                <DropdownMenuItem
-                  key={opt.value}
-                  onClick={() => handleStatusChange(opt.value)}
-                  className={cn("text-sm", opt.color)}
-                >
-                  {t(`status${opt.label}`)}
-                </DropdownMenuItem>
-              ))}
-            </DropdownMenuContent>
-          </DropdownMenu>
+          {/* Service flow: waiting/finished -> start (in service), in service -> finish. */}
+          <button
+            type="button"
+            onClick={
+              conversation.status === "open"
+                ? () => handleStatusChange("closed")
+                : handleStartService
+            }
+            className={cn(
+              "inline-flex h-7 items-center justify-center rounded-lg border px-2 text-xs font-medium",
+              conversation.status === "open"
+                ? "border-white/12 bg-white/[0.03] text-muted-foreground hover:border-[#9f8cff]/40 hover:bg-[#7B61FF]/10"
+                : "border-[#7B61FF] bg-[#7B61FF] text-white hover:bg-[#6a50f0]"
+            )}
+          >
+            {conversation.status === "open" ? t("finishService") : t("startService")}
+          </button>
 
           {/* Assign dropdown */}
           <DropdownMenu>
