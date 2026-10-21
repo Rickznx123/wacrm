@@ -6,6 +6,7 @@ import { dispatchWebhookEvent } from '@/lib/webhooks/deliver'
 import { verifyEvolutionWebhookAuth } from '@/lib/whatsapp/evolution-webhook-auth'
 import { dispatchInboundToAiReply } from '@/lib/ai/auto-reply'
 import { resolveEvolutionProvider } from '@/integrations/registry'
+import { handleInboundRefillOptOut } from '@/lib/refill/supabase-repo'
 import { attachAutoNewLeadTag } from '@/lib/contacts/auto-lead-tag'
 
 function supabaseAdmin() {
@@ -721,6 +722,8 @@ async function persistInboundMessage(
   if (!persisted) {
     return 'ok' as ProcessingResult
   }
+
+  await handleInboundRefillOptOut(supabaseAdmin(), accountId, contact.id, msg.text)
 
   // Reopen a previously closed thread when a new customer message arrives.
   // This UPDATE is app-driven (not only SQL-function-driven) so the webhook

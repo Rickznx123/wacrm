@@ -10,6 +10,7 @@ import { dispatchInboundToFlows } from '@/lib/flows/engine'
 import { dispatchInboundToAiReply } from '@/lib/ai/auto-reply'
 import { dispatchWebhookEvent } from '@/lib/webhooks/deliver'
 import { attachAutoNewLeadTag } from '@/lib/contacts/auto-lead-tag'
+import { handleInboundRefillOptOut } from '@/lib/refill/supabase-repo'
 import {
   handleTemplateWebhookChange,
   isTemplateWebhookField,
@@ -743,6 +744,7 @@ async function processMessage(
   // so the broadcast's `replied_count` advances (via the aggregate
   // trigger installed in migration 003).
   await flagBroadcastReplyIfAny(accountId, contactRecord.id)
+  await handleInboundRefillOptOut(supabaseAdmin(), accountId, contactRecord.id, message.text?.body)
 
   // ============================================================
   // Flow runner dispatch.

@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
+import { RefillConsent } from "./refill-consent";
 import { cn } from "@/lib/utils";
 import type { Contact, Deal, ContactNote, Tag } from "@/types";
 import {
@@ -175,6 +176,11 @@ export function ContactSidebar({ contact }: ContactSidebarProps) {
               </div>
             )}
           </div>
+
+          {/* Divider */}
+          <div className="my-4 border-t border-border" />
+
+          <RefillConsent contactId={contact.id} />
 
           {/* Divider */}
           <div className="my-4 border-t border-border" />

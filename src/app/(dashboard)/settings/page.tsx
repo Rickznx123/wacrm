@@ -20,6 +20,7 @@ import { MembersTab } from '@/components/settings/members-tab';
 import { ApiKeysSettings } from '@/components/settings/api-keys-settings';
 import { AiConfig } from '@/components/settings/ai-config';
 import { MetaCapiConfig } from '@/components/settings/meta-capi-config';
+import { RefillSettings } from '@/components/settings/refill-settings';
 import {
   resolveSection,
   type SettingsSection,
@@ -68,6 +69,7 @@ export default function SettingsPage() {
     'quick-replies': <QuickRepliesManager />,
     fields: <FieldsAndTagsPanel />,
     deals: <DealsSettings />,
+    refill: <RefillSettings />,
     members: <MembersTab />,
     api: <ApiKeysSettings />,
   };
