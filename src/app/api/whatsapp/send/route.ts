@@ -239,6 +239,9 @@ async function findOrCreateConversation(
       account_id: accountId,
       user_id: userId,
       contact_id: contactId,
+      // The agent started this thread from the contact page, so they own it.
+      status: 'open',
+      assigned_agent_id: userId,
     })
     .select('id')
     .single()

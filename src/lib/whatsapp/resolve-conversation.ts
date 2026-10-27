@@ -156,6 +156,7 @@ export async function resolveConversationByPhone(
       account_id: accountId,
       user_id: ownerUserId,
       contact_id: contactId,
+      status: 'pending',
     })
     .select('id')
     .single();

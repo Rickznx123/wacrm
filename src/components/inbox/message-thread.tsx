@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback, useRef, useMemo } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
+import { useCan } from "@/hooks/use-can";
 import { usePresence } from "@/hooks/use-presence";
 import { PresenceDot } from "@/components/presence/presence-dot";
 import { presenceLabel } from "@/lib/presence";
@@ -79,6 +80,8 @@ interface MessageThreadProps {
     conversationId: string,
     assignedAgentId: string | null,
   ) => void;
+  /** Take a waiting conversation (shared with the list's "Atender" button). */
+  onClaim: (conversation: Conversation) => void;
   /**
    * On mobile, the thread is shown full-screen with the conversation list
    * hidden. This callback lets the page deselect the active conversation
@@ -148,6 +151,7 @@ export function MessageThread({
   onUpdateMessage,
   onStatusChange,
   onAssignChange,
+  onClaim,
   onBack,
   resyncToken = 0,
   onRefresh,
@@ -159,6 +163,7 @@ export function MessageThread({
   const tQuote = useTranslations("Inbox.replyQuote");
 
   const { user } = useAuth();
+  const canClaim = useCan("send-messages");
   const { getPresence, getRow, now } = usePresence();
   const [loading, setLoading] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
@@ -625,26 +630,6 @@ export function MessageThread({
     [conversation, onStatusChange]
   );
 
-  // Starting service takes the conversation: in service + assigned to me.
-  const handleStartService = useCallback(async () => {
-    if (!conversation || !user?.id) return;
-
-    const supabase = createClient();
-    const { error } = await supabase
-      .from("conversations")
-      .update({ status: "open", assigned_agent_id: user.id })
-      .eq("id", conversation.id);
-
-    if (error) {
-      console.error("Failed to start service:", error);
-      toast.error("Failed to start service");
-      return;
-    }
-
-    onStatusChange(conversation.id, "open");
-    onAssignChange(conversation.id, user.id);
-  }, [conversation, user?.id, onStatusChange, onAssignChange]);
-
   const handleOpenTemplates = useCallback(() => {
     setTemplateModalOpen(true);
   }, []);
@@ -974,23 +959,25 @@ export function MessageThread({
             </button>
           )}
 
-          {/* Service flow: waiting/finished -> start (in service), in service -> finish. */}
-          <button
-            type="button"
-            onClick={
-              conversation.status === "open"
-                ? () => handleStatusChange("closed")
-                : handleStartService
-            }
-            className={cn(
-              "inline-flex h-7 items-center justify-center rounded-lg border px-2 text-xs font-medium",
-              conversation.status === "open"
-                ? "border-white/12 bg-white/[0.03] text-muted-foreground hover:border-[#9f8cff]/40 hover:bg-[#7B61FF]/10"
-                : "border-[#7B61FF] bg-[#7B61FF] text-white hover:bg-[#6a50f0]"
-            )}
-          >
-            {conversation.status === "open" ? t("finishService") : t("startService")}
-          </button>
+          {/* Service flow: waiting -> claim (in service + assigned to me), in service -> finish.
+              Finished threads have no action: a new customer message reopens them as waiting. */}
+          {conversation.status === "open" ? (
+            <button
+              type="button"
+              onClick={() => handleStatusChange("closed")}
+              className="inline-flex h-7 items-center justify-center rounded-lg border border-white/12 bg-white/[0.03] px-2 text-xs font-medium text-muted-foreground hover:border-[#9f8cff]/40 hover:bg-[#7B61FF]/10"
+            >
+              {t("finishService")}
+            </button>
+          ) : conversation.status === "pending" && canClaim ? (
+            <button
+              type="button"
+              onClick={() => onClaim(conversation)}
+              className="inline-flex h-7 items-center justify-center rounded-lg border border-[#7B61FF] bg-[#7B61FF] px-2 text-xs font-medium text-white hover:bg-[#6a50f0]"
+            >
+              {t("claim")}
+            </button>
+          ) : null}
 
           {/* Assign dropdown */}
           <DropdownMenu>

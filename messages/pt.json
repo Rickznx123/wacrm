@@ -127,13 +127,16 @@
   },
   "Inbox": {
     "page": {
-      "whatsappNotConnected": "WhatsApp® não está conectado. Vá para Configurações para conectar sua conta."
+      "whatsappNotConnected": "WhatsApp® não está conectado. Vá para Configurações para conectar sua conta.",
+      "alreadyClaimed": "Conversa já está em atendimento",
+      "claimFailed": "Não foi possível atender a conversa"
     },
     "conversationList": {
       "searchPlaceholder": "Pesquisar conversas...",
       "tabAll": "Todos",
       "tabInService": "Em atendimento",
       "tabWaiting": "Em espera",
+      "claim": "Atender",
       "tabFinished": "Finalizado",
       "filterAll": "Todas",
       "filterUnread": "Não lidas",
@@ -160,8 +163,8 @@
       "statusOpen": "Aberta",
       "statusPending": "Pendente",
       "statusClosed": "Fechada",
-      "startService": "Iniciar atendimento",
-      "finishService": "Finalizar",
+      "claim": "Atender",
+      "finishService": "Finalizar atendimento",
       "assign": "Atribuir",
       "assigned": "Atribuído",
       "unassign": "Desatribuir",

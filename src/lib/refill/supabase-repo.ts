@@ -260,7 +260,12 @@ export function createReminderSender(
     if (!conversationId) {
       const { data: created, error } = await db
         .from('conversations')
-        .insert({ account_id: ctx.accountId, user_id: ctx.auditUserId, contact_id: reminder.contact.id })
+        .insert({
+          account_id: ctx.accountId,
+          user_id: ctx.auditUserId,
+          contact_id: reminder.contact.id,
+          status: 'pending',
+        })
         .select('id')
         .single();
       if (!created) throw new Error(`conversation create failed: ${error?.message}`);

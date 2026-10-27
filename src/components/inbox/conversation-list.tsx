@@ -8,6 +8,7 @@ import {
   normalizeConversations,
 } from "@/lib/inbox/conversations";
 import { cn } from "@/lib/utils";
+import { useCan } from "@/hooks/use-can";
 import type { Conversation, ConversationStatus, Tag } from "@/types";
 import { MoreVertical, Search, ChevronDown, X } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
@@ -29,6 +30,8 @@ interface ConversationListProps {
   onSelect: (conversation: Conversation) => void;
   conversations: Conversation[];
   onConversationsLoaded: (conversations: Conversation[]) => void;
+  /** "Atender" on a waiting card: take the conversation and open it. */
+  onClaim: (conversation: Conversation) => void;
   /**
    * Increment to force the fetch effect below to refire. The parent
    * bumps this on realtime reconnect / tab visibility → visible so the
@@ -53,9 +56,11 @@ export function ConversationList({
   onSelect,
   conversations,
   onConversationsLoaded,
+  onClaim,
   resyncToken = 0,
 }: ConversationListProps) {
   const t = useTranslations("Inbox.conversationList");
+  const canClaim = useCan("send-messages");
 
   const STATUS_TABS: { label: string; value: StatusTab }[] = useMemo(
     () => [
@@ -67,7 +72,7 @@ export function ConversationList({
   );
 
   const [search, setSearch] = useState("");
-  const [statusTab, setStatusTab] = useState<StatusTab>("all");
+  const [statusTab, setStatusTab] = useState<StatusTab>("pending");
   const [unreadOnly, setUnreadOnly] = useState(false);
   const [loading, setLoading] = useState(true);
   // Contact-based filters (issue #272). Tags use OR logic (a conversation
@@ -453,6 +458,7 @@ export function ConversationList({
                 conversation={conv}
                 isActive={conv.id === activeConversationId}
                 onSelect={handleSelect}
+                onClaim={canClaim ? onClaim : undefined}
                 t={t}
               />
             ))}
@@ -467,6 +473,8 @@ interface ConversationItemProps {
   conversation: Conversation;
   isActive: boolean;
   onSelect: (conversation: Conversation) => void;
+  /** Omitted for roles that can't take conversations (viewer). */
+  onClaim?: (conversation: Conversation) => void;
   t: ReturnType<typeof useTranslations>;
 }
 
@@ -474,8 +482,10 @@ function ConversationItem({
   conversation,
   isActive,
   onSelect,
+  onClaim,
   t,
 }: ConversationItemProps) {
+  const showClaim = conversation.status === "pending" && !!onClaim;
   const contact = conversation.contact;
   const displayName = contact?.name || contact?.phone || t("unknown");
   const initials = displayName.charAt(0).toUpperCase();
@@ -490,54 +500,75 @@ function ConversationItem({
       })
     : "";
 
+  // The card is itself a <button>, so "Atender" sits beside it (absolutely
+  // positioned over the card's bottom-right corner) instead of nested in it.
   return (
-    <button
-      onClick={handleClick}
-      className={cn(
-        `flex w-full items-start gap-3.5 rounded-2xl border px-3.5 py-3.5 text-left transition-all duration-200 ease-out will-change-transform ${ASCENT_INTERACTIVE}`,
-        isActive
-          ? "border-[#9f8cff]/75 bg-[linear-gradient(175deg,rgba(123,97,255,0.28),rgba(123,97,255,0.08)_55%,rgba(255,255,255,0.02))] shadow-[0_0_0_1px_rgba(123,97,255,0.28),0_18px_36px_rgba(30,20,76,0.42)]"
-          : "border-white/12 bg-[linear-gradient(180deg,rgba(255,255,255,0.045),rgba(255,255,255,0.018)_45%,rgba(255,255,255,0.01))] shadow-[0_12px_28px_rgba(7,8,18,0.34)] hover:-translate-y-0.5 hover:scale-[1.005] hover:border-[#a797ff]/45 hover:shadow-[0_16px_34px_rgba(13,14,28,0.42),0_0_0_1px_rgba(123,97,255,0.16)]"
-      )}
-    >
-      {/* Avatar */}
-      <Avatar className="size-10 shrink-0 border border-white/15 shadow-[0_8px_18px_rgba(16,18,38,0.35)]">
-        {contact?.avatar_url ? (
-          <AvatarImage src={contact.avatar_url} alt={displayName} />
-        ) : null}
-        <AvatarFallback className="bg-[linear-gradient(160deg,rgba(123,97,255,0.22),rgba(255,255,255,0.06))] text-sm font-semibold text-[var(--ascent-title)]">
-          {initials}
-        </AvatarFallback>
-      </Avatar>
-
-      {/* Content */}
-      <div className="min-w-0 flex-1">
-        <div className="flex items-center justify-between gap-2">
-          <span className="truncate text-[13.5px] font-semibold tracking-[0.01em] text-[var(--ascent-title)]">
-            {displayName}
-          </span>
-          <span className="shrink-0 text-[10.5px] font-medium text-[var(--ascent-subtle)]">{timeAgo}</span>
-        </div>
-        <div className="mt-1 flex items-center justify-between gap-2">
-          <p className="truncate text-[12.5px] font-medium text-[var(--ascent-subtle)]/95">
-            {conversation.last_message_text || t("noMessagesYet")}
-          </p>
-          <div className="flex shrink-0 items-center gap-1.5">
-            {conversation.unread_count > 0 && (
-              <span className="flex h-4 min-w-4 items-center justify-center rounded-full bg-[#FF4F8A] px-1 text-[10px] font-bold text-white shadow-[0_8px_18px_rgba(255,79,138,0.45)]">
-                {conversation.unread_count}
-              </span>
-            )}
-            <span
-              className={cn(
-                "h-2 w-2 rounded-full",
-                STATUS_COLORS[conversation.status]
+    <div className="relative">
+      <button
+        onClick={handleClick}
+        className={cn(
+          `flex w-full items-start gap-3.5 rounded-2xl border px-3.5 py-3.5 text-left transition-all duration-200 ease-out will-change-transform ${ASCENT_INTERACTIVE}`,
+          isActive
+            ? "border-[#9f8cff]/75 bg-[linear-gradient(175deg,rgba(123,97,255,0.28),rgba(123,97,255,0.08)_55%,rgba(255,255,255,0.02))] shadow-[0_0_0_1px_rgba(123,97,255,0.28),0_18px_36px_rgba(30,20,76,0.42)]"
+            : "border-white/12 bg-[linear-gradient(180deg,rgba(255,255,255,0.045),rgba(255,255,255,0.018)_45%,rgba(255,255,255,0.01))] shadow-[0_12px_28px_rgba(7,8,18,0.34)] hover:-translate-y-0.5 hover:scale-[1.005] hover:border-[#a797ff]/45 hover:shadow-[0_16px_34px_rgba(13,14,28,0.42),0_0_0_1px_rgba(123,97,255,0.16)]"
+        )}
+      >
+        {/* Avatar */}
+        <Avatar className="size-10 shrink-0 border border-white/15 shadow-[0_8px_18px_rgba(16,18,38,0.35)]">
+          {contact?.avatar_url ? (
+            <AvatarImage src={contact.avatar_url} alt={displayName} />
+          ) : null}
+          <AvatarFallback className="bg-[linear-gradient(160deg,rgba(123,97,255,0.22),rgba(255,255,255,0.06))] text-sm font-semibold text-[var(--ascent-title)]">
+            {initials}
+          </AvatarFallback>
+        </Avatar>
+  
+        {/* Content */}
+        <div className="min-w-0 flex-1">
+          <div className="flex items-center justify-between gap-2">
+            <span className="truncate text-[13.5px] font-semibold tracking-[0.01em] text-[var(--ascent-title)]">
+              {displayName}
+            </span>
+            <span className="shrink-0 text-[10.5px] font-medium text-[var(--ascent-subtle)]">{timeAgo}</span>
+          </div>
+          <div className="mt-1 flex items-center justify-between gap-2">
+            <p className="truncate text-[12.5px] font-medium text-[var(--ascent-subtle)]/95">
+              {conversation.last_message_text || t("noMessagesYet")}
+            </p>
+            <div className="flex shrink-0 items-center gap-1.5">
+              {conversation.unread_count > 0 && (
+                <span className="flex h-4 min-w-4 items-center justify-center rounded-full bg-[#FF4F8A] px-1 text-[10px] font-bold text-white shadow-[0_8px_18px_rgba(255,79,138,0.45)]">
+                  {conversation.unread_count}
+                </span>
               )}
-              title={conversation.status}
-            />
+              {showClaim ? (
+                // Reserves the corner the absolute "Atender" button covers.
+                <span className="h-6 w-16" aria-hidden />
+              ) : (
+                <span
+                  className={cn(
+                    "h-2 w-2 rounded-full",
+                    STATUS_COLORS[conversation.status]
+                  )}
+                  title={conversation.status}
+                />
+              )}
+            </div>
           </div>
         </div>
-      </div>
-    </button>
+      </button>
+      {showClaim && (
+        <button
+          type="button"
+          onClick={(e) => {
+            e.stopPropagation();
+            onClaim?.(conversation);
+          }}
+          className="absolute right-3.5 bottom-3 inline-flex h-6 items-center justify-center rounded-lg border border-[#7B61FF] bg-[#7B61FF] px-2.5 text-[11px] font-medium text-white shadow-[0_8px_18px_rgba(123,97,255,0.35)] hover:bg-[#6a50f0]"
+        >
+          {t("claim")}
+        </button>
+      )}
+    </div>
   );
 }

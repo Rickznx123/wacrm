@@ -10,6 +10,8 @@ import {
 } from "@/lib/inbox/conversations";
 import type { Conversation, Message, Contact, ConversationStatus } from "@/types";
 import { useRealtime } from "@/hooks/use-realtime";
+import { useAuth } from "@/hooks/use-auth";
+import { toast } from "sonner";
 import { ConversationList } from "@/components/inbox/conversation-list";
 import { MessageThread } from "@/components/inbox/message-thread";
 import { ContactSidebar } from "@/components/inbox/contact-sidebar";
@@ -53,6 +55,7 @@ function isOptimisticMatch(temp: Message, incoming: Message): boolean {
 
 export default function InboxPage() {
   const t = useTranslations("Inbox.page");
+  const { user } = useAuth();
   const router = useRouter();
   const searchParams = useSearchParams();
   /**
@@ -581,6 +584,48 @@ export default function InboxPage() {
     [activeConversation]
   );
 
+  // "Atender" (list card + chat header): waiting -> in service, assigned to
+  // me. The update only matches while still pending, so when two agents
+  // click at once the second one affects no rows and gets rolled back.
+  const handleClaimConversation = useCallback(
+    async (conv: Conversation) => {
+      if (!user?.id) return;
+      const userId = user.id;
+      const setFields = (
+        status: ConversationStatus,
+        assignedAgentId: string | undefined,
+      ) => {
+        const patch = (c: Conversation) =>
+          c.id === conv.id ? { ...c, status, assigned_agent_id: assignedAgentId } : c;
+        setConversations((prev) => prev.map(patch));
+        setActiveConversation((prev) => (prev ? patch(prev) : prev));
+      };
+
+      setFields("open", userId);
+      handleSelectConversation({ ...conv, status: "open", assigned_agent_id: userId });
+
+      const { data, error } = await createClient()
+        .from("conversations")
+        .update({ status: "open", assigned_agent_id: userId })
+        .eq("id", conv.id)
+        .eq("status", "pending")
+        .select("id");
+
+      if (!error && data && data.length > 0) return;
+
+      setFields(conv.status, conv.assigned_agent_id);
+      if (error) {
+        console.error("Failed to claim conversation:", error);
+        toast.error(t("claimFailed"));
+        return;
+      }
+      toast.error(t("alreadyClaimed"));
+      // Pull the real status/assignee the other agent just wrote.
+      setResyncToken((n) => n + 1);
+    },
+    [user?.id, handleSelectConversation, t]
+  );
+
   const handleAssignChange = useCallback(
     (conversationId: string, assignedAgentId: string | null) => {
       setConversations((prev) =>
@@ -641,6 +686,7 @@ export default function InboxPage() {
             onSelect={handleSelectConversation}
             conversations={conversations}
             onConversationsLoaded={handleConversationsLoaded}
+            onClaim={handleClaimConversation}
             resyncToken={resyncToken}
           />
         </div>
@@ -670,6 +716,7 @@ export default function InboxPage() {
             onUpdateMessage={handleUpdateMessage}
             onStatusChange={handleStatusChange}
             onAssignChange={handleAssignChange}
+            onClaim={handleClaimConversation}
             onBack={handleCloseConversation}
             resyncToken={resyncToken}
             onRefresh={handleManualRefresh}

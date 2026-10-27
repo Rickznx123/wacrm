@@ -184,14 +184,11 @@ export function Sidebar({ open = false, onClose }: SidebarProps) {
         {/* Logo row. On mobile we put a close button here; on desktop the
             close button is hidden since the sidebar is always-visible. */}
         <div className="flex h-14 shrink-0 items-center justify-between gap-2 border-b border-[var(--ascent-border)] px-4">
-          <Link href="/dashboard" className="flex items-center">
-            <img
-              src="/logo-ascent-symbol.png"
-              alt={t("title")}
-              width={189}
-              height={184}
-              className="h-10 w-auto drop-shadow-[0_0_12px_rgba(255,79,138,0.35)]"
-            />
+          <Link
+            href="/dashboard"
+            className="flex items-center text-[15px] font-semibold tracking-[0.08em] text-[var(--ascent-title)]"
+          >
+            {t("title")}
           </Link>
           <button
             type="button"
